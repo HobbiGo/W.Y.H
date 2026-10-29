@@ -1,0 +1,310 @@
+
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin language editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
+{
+  "404": {
+    "title": "404",
+    "title_accessible": "404 — Page not found",
+    "not_found": "Page not found.",
+    "back_to_shopping": "Explore the collection",
+    "suggestions_heading": "A different way forward.",
+    "recovery_body": "This page couldn’t be found. There’s still plenty to discover."
+  },
+  "general": {
+    "skip_to_content": "Skip to content",
+    "play_video": "Play video",
+    "video_player": "Video player",
+    "captions": "Captions",
+    "clear": "Clear",
+    "back": "Back",
+    "close": "Close",
+    "dismiss": "Dismiss",
+    "drawer": "Drawer",
+    "placeholder_image": "Placeholder image",
+    "account": "Account",
+    "search": "Search",
+    "pagination": {
+      "label": "Pagination",
+      "previous_page": "Previous page",
+      "next_page": "Next page",
+      "page": "Page {{ number }}",
+      "current_page": "Page {{ number }}, current page"
+    },
+    "meta": {
+      "tagged": "tagged \"{{ tags }}\"",
+      "page": "Page {{ number }}"
+    }
+  },
+  "accessibility": {
+    "results_updated": "Results updated",
+    "variant_updated": "Selection updated",
+    "update_error": "An error occurred. Please try again."
+  },
+  "blog": {
+    "articles_heading": "Articles",
+    "article_metadata_html": "<time datetime=\"{{ datetime }}\">{{ date }}</time> · {{ author }}",
+    "article_metadata_no_author_html": "<time datetime=\"{{ datetime }}\">{{ date }}</time>",
+    "comment_form_body": "Comment",
+    "comment_form_email": "Email",
+    "comment_form_name": "Name",
+    "comment_form_submit": "Post",
+    "comment_form_title": "Add a comment",
+    "comments_count": {
+      "one": "1 comment",
+      "other": "{{ count }} comments"
+    },
+    "no_articles": "No articles yet."
+  },
+  "cart": {
+    "checkout": "Checkout",
+    "title": "Cart",
+    "remove": "Remove: {{ title }}",
+    "empty": "Your cart is empty.",
+    "empty_description": "Looks like you haven't added anything to your cart yet.",
+    "icon_label": {
+      "one": "Cart (1 item)",
+      "other": "Cart ({{ count }} items)"
+    },
+    "item_count": {
+      "one": "1 item in cart",
+      "other": "{{ count }} items in cart"
+    },
+    "item_removed": "Item removed from cart",
+    "updated": "Cart updated",
+    "note_label": "Order notes",
+    "note_placeholder": "Add special instructions for your order",
+    "taxes_and_shipping_at_checkout": "Taxes and shipping calculated at checkout",
+    "discount_list": "Applied discounts",
+    "discount_savings": "(-{{ amount }})",
+    "discount_code": "Discount code",
+    "discount_title": "Discount: {{ title }}",
+    "update_error": "Could not update cart. Please try again.",
+    "refresh_error": "Cart updated, but the display may be out of date. Refresh the page to see the latest cart.",
+    "continue_shopping": "Continue shopping",
+    "checkout_description": "Proceeds to secure checkout",
+    "discount_placeholder": "Enter code",
+    "discount_apply": "Apply",
+    "note_accordion_label": "Special instructions",
+    "total_label": "Estimated total"
+  },
+  "contact": {
+    "name": "Name",
+    "email": "Email",
+    "phone": "Phone (optional)",
+    "message": "Message",
+    "submit": "Send message",
+    "success": "Thank you for reaching out. We'll be in touch soon."
+  },
+  "collections": {
+    "all_collections": "All collections",
+    "eyebrow": "The W.Y.H collection",
+    "browse_heading": "Browse collections",
+    "products_heading": "Products",
+    "placeholder_title": "Collection title",
+    "no_collections": "No collections found.",
+    "no_products": "No products found.",
+    "products_count": {
+      "one": "1 product",
+      "other": "{{ count }} products"
+    },
+    "filter": "Filter",
+    "filters": "Filters",
+    "active_filters": "Active filters",
+    "clear_all": "Clear all",
+    "remove_filter": "Remove {{ filter }}",
+    "show_results": "Show results",
+    "value_unavailable": "Unavailable",
+    "price_min": "Min price",
+    "price_max": "Max price",
+    "price_to": "to",
+    "sort_by": "Sort by",
+    "filtering": {
+      "show_more": "Show more"
+    },
+    "view_all": "View all"
+  },
+  "header": {
+    "menu": "Menu",
+    "mobile_navigation": "Mobile navigation",
+    "navigation": "Main navigation",
+    "show_submenu": "Show submenu for {{ title }}"
+  },
+  "footer": {
+    "quick_links": "Quick links",
+    "policies": "Policies"
+  },
+  "gift_card": {
+    "add_to_apple_wallet": "Add to Apple Wallet",
+    "card": "Gift card",
+    "expired": "This gift card has expired",
+    "expires_on": "Expires on {{ expires_on }}",
+    "use_at_checkout": "Use this gift card at checkout",
+    "a_gift_for_you": "A gift for you",
+    "available": "{{ amount }} available",
+    "a_little_something": "A little something for you",
+    "card_label": "{{ shop }} gift card",
+    "copy_code": "Copy code",
+    "copied": "Code copied",
+    "copy_error": "Couldn’t copy automatically. Copy the code manually.",
+    "disabled": "This gift card is no longer valid",
+    "start_shopping": "Start shopping"
+  },
+  "page": {
+    "content_heading": "Page content"
+  },
+  "password": {
+    "title": "This shop is private",
+    "eyebrow": "Opening soon",
+    "launch_description": "Get an early look at what's next.",
+    "enter": "Enter",
+    "enter_with_password": "Enter with password",
+    "enter_store": "Enter store",
+    "show": "Show",
+    "hide": "Hide",
+    "error": "Incorrect password. Please try again.",
+    "field_label": "Password",
+    "placeholder": "Enter password",
+    "get_updates": "Get opening updates",
+    "updates_description": "Be the first to know when we open.",
+    "updates_submit": "Notify me",
+    "updates_success": "Thanks for subscribing."
+  },
+  "product": {
+    "details": "Product details",
+    "placeholder_title": "Product title",
+    "quantity": "Quantity",
+    "quantity_decrease": "Decrease quantity: {{ title }}",
+    "quantity_increase": "Increase quantity: {{ title }}",
+    "quantity_input": "Quantity for {{ title }}",
+    "add_to_cart": "Add to cart",
+    "added_to_cart": "Added to cart",
+    "sold_out": "Sold out",
+    "description": "Description",
+    "view_image": "View image: {{ title }}",
+    "image_zoom": "Expanded product image",
+    "highlight_leather": "Full-grain leather",
+    "highlight_craft": "Hand-finished details",
+    "highlight_heritage": "Made to last decades"
+  },
+  "products": {
+    "price": {
+      "price": "Price",
+      "price_range_html": "{{ min }} – {{ max }}",
+      "price_range_label": "Price range",
+      "regular_price": "Regular price",
+      "sale_price": "Sale price",
+      "savings": "Save {{ amount }}"
+    },
+    "quantity": {
+      "decrease": "Decrease quantity",
+      "increase": "Increase quantity",
+      "input_label": "Quantity"
+    }
+  },
+  "filters": {
+    "active_count": {
+      "one": "1 active filter",
+      "other": "{{ count }} active filters"
+    }
+  },
+  "forms": {
+    "required": "required",
+    "form_errors_title": "Please fix the following errors:"
+  },
+  "search": {
+    "title": "Search",
+    "label": "Search",
+    "placeholder": "Search",
+    "products_heading": "Products",
+    "results_heading": "Search results",
+    "view_all_results": "View all results",
+    "results_count_announcement": {
+      "one": "1 result available",
+      "other": "{{ count }} results available"
+    },
+    "no_results_announcement": "No results found for {{ terms }}",
+    "results_for": "{{ count }} results found for {{ terms }}",
+    "no_results": "No results found for {{ terms }}",
+    "live_results_announcement": {
+      "one": "{{ count }} result found for {{ terms }}",
+      "other": "{{ count }} results found for {{ terms }}"
+    },
+    "live_no_results_announcement": "No results found for {{ terms }}"
+  },
+  "localization": {
+    "form_label": "Region and language",
+    "language": "Language",
+    "country_region_currency": "Country/region and currency",
+    "update_language": "Update"
+  },
+  "home": {
+    "hero": {
+      "eyebrow": "Explore heritage",
+      "title": "Timeless elegance in every journey",
+      "subtitle": "Full-grain leather bags, wallets and footwear, made to carry your story for decades.",
+      "cta": "Shop the collection"
+    },
+    "categories": {
+      "heading": "Shop by category",
+      "travel_title": "Travel bags",
+      "travel_body": "Our signature duffels & cases",
+      "wallets_title": "Wallets & accessories",
+      "wallets_body": "Refined everyday essentials",
+      "footwear_title": "Leather footwear",
+      "footwear_body": "Elegance for every stride",
+      "jackets_title": "Leather jackets",
+      "jackets_body": "Timeless layers for the road",
+      "explore": "Explore"
+    },
+    "featured": {
+      "heading": "Signature pieces",
+      "view_all": "View all"
+    },
+    "social": {
+      "eyebrow": "Stay connected",
+      "title": "Follow W.Y.H",
+      "body": "New arrivals, behind-the-scenes craftsmanship and stories from the road.",
+      "website": "www.wyh.co.id",
+      "instagram": "Instagram",
+      "instagram_handle": "@wyh.official",
+      "twitter": "X (Twitter)",
+      "twitter_handle": "@wyh_official",
+      "opens_new_tab": "{{ network }} {{ handle }} (opens in a new tab)"
+    },
+    "story": {
+      "eyebrow": "Est. 2023",
+      "title": "Walk your heritage",
+      "body": "Every W.Y.H piece is cut from full-grain leather and finished by hand, so it ages with you and gains character on every journey.",
+      "cta": "Shop the collection"
+    },
+    "samples": {
+      "p1_title": "Slate Canvas Weekender",
+      "p2_title": "Slate Weekender with Leather Tag",
+      "p3_title": "Navy Leather Duffel",
+      "p4_title": "Cognac Travel Duffel"
+    }
+  },
+  "brand": {
+    "name": "W.Y.H",
+    "tagline": "Handbags & accessories",
+    "established": "Est. 2023",
+    "motto": "Walk your heritage"
+  },
+  "bottom_nav": {
+    "label": "Quick navigation",
+    "home": "Home",
+    "shop": "Shop",
+    "search": "Search",
+    "account": "Account",
+    "cart": "Cart"
+  }
+}
+
+
