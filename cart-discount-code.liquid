@@ -1,0 +1,32 @@
+
+{% doc %}
+  Renders a native discount-code disclosure for an owning `<s-cart>` element.
+  The input stays outside cart form submission; `s-cart.js` applies it through
+  Shopify Standard Actions when the button is pressed or Enter is used.
+
+  @param {string} cart_id - The id of the owning `<s-cart>` element for command targeting. @required
+  @param {string} input_id - A unique id for the discount-code input and label. @required
+  @param {string} [class] - Additional CSS classes for the disclosure.
+
+  @category commerce
+  @renders details
+
+  @example
+  {% render 'cart-discount-code', cart_id: 'cart', input_id: 'cart-discount-input' %}
+{% enddoc %}
+
+<details class="group border-t border-border {{ class }}">
+  <summary class="list-none [&::-webkit-details-marker]:hidden flex cursor-pointer items-center justify-between py-3 text-sm font-medium text-on-surface">
+    {{ 'cart.discount_code' | t }}
+    <span class="ms-4 size-4 shrink-0 group-open:rotate-180" aria-hidden="true">{{- 'icon-chevron-down.svg' | inline_asset_content -}}</span>
+  </summary>
+  <div class="flex gap-2 pb-4">
+    {%- comment -%} The summary is not programmatically associated with this input, so retain a real label. {%- endcomment -%}
+    <label for="{{ input_id | escape }}" class="sr-only">{{ 'cart.discount_code' | t }}</label>
+    {%- comment -%} form="" prevents Enter from submitting a parent cart form; the owning s-cart handles Enter and the command. {%- endcomment -%}
+    <input type="text" id="{{ input_id | escape }}" form="" data-discount-code placeholder="{{ 'cart.discount_placeholder' | t }}" class="min-w-0 flex-1 rounded-input border border-border bg-surface px-3 py-2 text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
+    <button type="button" commandfor="{{ cart_id | escape }}" command="--apply-discount" class="rounded-button border border-border px-4 py-2 text-sm font-medium hover:bg-surface-secondary motion-safe:active:scale-[0.97]">{{ 'cart.discount_apply' | t }}</button>
+  </div>
+</details>
+
+
