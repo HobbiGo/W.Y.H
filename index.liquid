@@ -1,0 +1,349 @@
+
+{%- comment -%} Visually-hidden page heading keeps the homepage's h1 contract while its regions provide the visible composition. {%- endcomment -%}
+<h1 class="sr-only">{{ shop.name }}</h1>
+
+{%- liquid
+  assign hero_image = images['wyh-hero-platform.png']
+  assign travel_image = images['wyh-travel-duffel.png']
+  assign wallet_image = images['wyh-wallet.png']
+  assign footwear_image = images['wyh-footwear.png']
+  assign story_image = images['wyh-artisan.png']
+  assign shop_url = routes.all_products_collection_url
+  assign travel_url = shop_url
+  if collections['travel-bags'].products_count > 0
+    assign travel_url = collections['travel-bags'].url
+  endif
+  assign wallets_url = shop_url
+  if collections['wallets-accessories'].products_count > 0
+    assign wallets_url = collections['wallets-accessories'].url
+  endif
+  assign jackets_collection = collections['leather-jackets']
+  assign jackets_image = images['wyh-jackets.jpg'] | default: jackets_collection.image | default: jackets_collection.products.first.featured_image
+  assign jackets_url = shop_url
+  if jackets_collection.products_count > 0
+    assign jackets_url = jackets_collection.url
+  endif
+  assign footwear_url = shop_url
+  if collections['leather-footwear'].products_count > 0
+    assign footwear_url = collections['leather-footwear'].url
+  endif
+-%}
+
+{%- comment -%} The known hero image source is mirrored by the index preload in layout/theme.liquid. {%- endcomment -%}
+{%
+  block 'container',
+  class: 'relative isolate overflow-hidden min-h-[78svh] md:min-h-hero flex',
+  background_image: hero_image,
+  background_image_loading: 'eager',
+  background_image_fetchpriority: 'high',
+  background_image_sizes: '100vw',
+  attributes: 'aria-labelledby="home-hero-heading"'
+%}
+  {%- unless hero_image -%}
+    {% render 'placeholder-texture', kind: 'hero', seed: 1, class: 'absolute inset-0 aspect-auto -z-20' %}
+  {%- endunless -%}
+
+  {%- comment -%} Functional legibility wash: the photo melts into the surface so copy reads on any crop. {%- endcomment -%}
+  <div class="pointer-events-none absolute inset-0 bg-linear-to-t from-surface via-surface/55 to-surface/5"></div>
+  <div class="pointer-events-none absolute inset-0 bg-linear-to-r from-surface/70 to-transparent max-md:hidden"></div>
+
+  <div class="relative flex w-full max-w-page mx-auto flex-col items-center justify-end gap-4 px-margin pt-24 pb-14 text-center md:items-start md:text-start md:pb-24">
+    {% block 'text', variant: 'type-overline', class: 'text-accent tracking-[0.3em]' %}
+      {{- 'home.hero.eyebrow' | t -}}
+    {% endblock %}
+
+    {% block 'text', tag: 'h2', variant: 'type-display', class: 'max-w-3xl text-on-surface', attributes: 'id="home-hero-heading"' %}
+      {{- 'home.hero.title' | t -}}
+    {% endblock %}
+
+    {% block 'text', variant: 'type-body-lg', class: 'max-w-md text-on-surface/80' %}
+      {{- 'home.hero.subtitle' | t -}}
+    {% endblock %}
+
+    {% block 'button', url: shop_url, variant: 'button-primary', class: 'mt-2 h-12 px-8 rounded-button text-xs uppercase tracking-[0.2em]' %}
+      {{- 'home.hero.cta' | t -}}
+    {% endblock %}
+  </div>
+{% endblock %}
+
+{%- assign category_sizes = '(min-width: 1280px) 300px, (min-width: 768px) 23vw, 45vw' -%}
+{% block 'container', class: 'w-full max-w-page mx-auto px-margin pt-10 pb-6 md:pt-20 md:pb-10', attributes: 'aria-labelledby="home-categories-heading"' %}
+  {% block 'text', tag: 'h2', variant: 'type-heading-md', class: 'mb-6 text-center text-accent uppercase tracking-[0.2em] md:mb-10', attributes: 'id="home-categories-heading"' %}
+    {{- 'home.categories.heading' | t -}}
+  {% endblock %}
+
+  <ul role="list" class="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-6">
+    <li>
+      {%- assign travel_label = 'home.categories.travel_title' | t | replace: '&amp;', '&' -%}
+      {% block 'card', url: travel_url, aria_label: travel_label, link_mode: 'card', alignment: 'text-center', border_radius: 'rounded-card', class: 'h-full gap-3 overflow-hidden border border-accent/25 bg-surface-secondary p-2.5 pb-4 hover:border-accent/70 motion-safe:transition-colors md:p-4 md:pb-6' %}
+        <div class="overflow-hidden rounded-[calc(var(--radius-card)-4px)] aspect-square md:aspect-[4/5]">
+          {% block 'image', fallback_image: travel_image, alt: travel_label, sizes: category_sizes, placeholder_kind: 'collection', seed: 2, attributes: 'loading="lazy"' %}{% endblock %}
+        </div>
+        {% block 'text', tag: 'h3', variant: 'type-heading-sm', class: 'text-accent uppercase tracking-[0.12em]' %}
+          {{- 'home.categories.travel_title' | t -}}
+        {% endblock %}
+        {% block 'text', variant: 'type-body-sm', class: 'text-on-surface/80' %}
+          {{- 'home.categories.travel_body' | t -}}
+        {% endblock %}
+      {% endblock %}
+    </li>
+    <li>
+      {%- assign wallets_label = 'home.categories.wallets_title' | t | replace: '&amp;', '&' -%}
+      {% block 'card', url: wallets_url, aria_label: wallets_label, link_mode: 'card', alignment: 'text-center', border_radius: 'rounded-card', class: 'h-full gap-3 overflow-hidden border border-accent/25 bg-surface-secondary p-2.5 pb-4 hover:border-accent/70 motion-safe:transition-colors md:p-4 md:pb-6' %}
+        <div class="overflow-hidden rounded-[calc(var(--radius-card)-4px)] aspect-square md:aspect-[4/5]">
+          {% block 'image', fallback_image: wallet_image, alt: wallets_label, sizes: category_sizes, placeholder_kind: 'collection', seed: 3, attributes: 'loading="lazy"' %}{% endblock %}
+        </div>
+        {% block 'text', tag: 'h3', variant: 'type-heading-sm', class: 'text-accent uppercase tracking-[0.12em]' %}
+          {{- 'home.categories.wallets_title' | t -}}
+        {% endblock %}
+        {% block 'text', variant: 'type-body-sm', class: 'text-on-surface/80' %}
+          {{- 'home.categories.wallets_body' | t -}}
+        {% endblock %}
+      {% endblock %}
+    </li>
+    <li>
+      {%- assign footwear_label = 'home.categories.footwear_title' | t | replace: '&amp;', '&' -%}
+      {% block 'card', url: footwear_url, aria_label: footwear_label, link_mode: 'card', alignment: 'text-center', border_radius: 'rounded-card', class: 'h-full gap-3 overflow-hidden border border-accent/25 bg-surface-secondary p-2.5 pb-4 hover:border-accent/70 motion-safe:transition-colors md:p-4 md:pb-6' %}
+        <div class="overflow-hidden rounded-[calc(var(--radius-card)-4px)] aspect-square md:aspect-[4/5]">
+          {% block 'image', fallback_image: footwear_image, alt: footwear_label, sizes: category_sizes, placeholder_kind: 'collection', seed: 4, attributes: 'loading="lazy"' %}{% endblock %}
+        </div>
+        {% block 'text', tag: 'h3', variant: 'type-heading-sm', class: 'text-accent uppercase tracking-[0.12em]' %}
+          {{- 'home.categories.footwear_title' | t -}}
+        {% endblock %}
+        {% block 'text', variant: 'type-body-sm', class: 'text-on-surface/80' %}
+          {{- 'home.categories.footwear_body' | t -}}
+        {% endblock %}
+      {% endblock %}
+    </li>
+    <li>
+      {%- assign jackets_label = 'home.categories.jackets_title' | t | replace: '&amp;', '&' -%}
+      {% block 'card', url: jackets_url, aria_label: jackets_label, link_mode: 'card', alignment: 'text-center', border_radius: 'rounded-card', class: 'h-full gap-3 overflow-hidden border border-accent/25 bg-surface-secondary p-2.5 pb-4 hover:border-accent/70 motion-safe:transition-colors md:p-4 md:pb-6' %}
+        <div class="overflow-hidden rounded-[calc(var(--radius-card)-4px)] aspect-square md:aspect-[4/5]">
+          {% block 'image', fallback_image: jackets_image, alt: jackets_label, sizes: category_sizes, placeholder_kind: 'collection', seed: 5, attributes: 'loading="lazy"' %}{% endblock %}
+        </div>
+        {% block 'text', tag: 'h3', variant: 'type-heading-sm', class: 'text-accent uppercase tracking-[0.12em]' %}
+          {{- 'home.categories.jackets_title' | t -}}
+        {% endblock %}
+        {% block 'text', variant: 'type-body-sm', class: 'text-on-surface/80' %}
+          {{- 'home.categories.jackets_body' | t -}}
+        {% endblock %}
+      {% endblock %}
+    </li>
+  </ul>
+{% endblock %}
+
+{%- comment -%} Sample pieces render only while the catalog is empty; the real featured collection replaces them automatically once products exist. {%- endcomment -%}
+{%- if shop.products_count == 0 -%}
+  {% block 'container', class: 'w-full max-w-page mx-auto px-margin py-10 md:py-16', attributes: 'aria-labelledby="home-featured-heading"' %}
+    <div class="mb-6 flex items-end justify-between gap-4 border-b border-accent/25 pb-4">
+      {% block 'text', tag: 'h2', variant: 'type-heading-lg', class: 'text-on-surface', attributes: 'id="home-featured-heading"' %}
+        {{- 'home.featured.heading' | t -}}
+      {% endblock %}
+      {% block 'link', url: shop_url, class: 'shrink-0 text-accent no-underline uppercase tracking-[0.15em] text-xs hover:text-on-surface' %}
+        {{- 'home.featured.view_all' | t -}}
+      {% endblock %}
+    </div>
+
+    {%- liquid
+      assign sample_slate = images['1792832274504.jpg']
+      assign sample_navy = images['1792839786131.jpg']
+      assign sample_cognac = images['Screenshot_20261024_154442_com.android.chrome.jpg']
+    -%}
+    {%- comment -%} The uploaded photos are collages and screenshots, so each card crops one panel with fixed physical offsets that must not mirror in RTL. {%- endcomment -%}
+    <ul role="list" class="grid grid-cols-2 gap-x-3 gap-y-8 md:grid-cols-4 md:gap-x-6">
+      <li class="flex flex-col gap-2">
+        <div class="relative overflow-hidden rounded-card bg-surface-secondary aspect-[4/5]">
+          {%- if sample_slate -%}<img src="{{ sample_slate | image_url: width: 1500 }}" width="{{ sample_slate.width }}" height="{{ sample_slate.height }}" alt="{{ 'home.samples.p1_title' | t }}" loading="lazy" class="absolute max-w-none h-auto" style="width:229.4%;left:-13.8%;top:0">{%- endif -%}
+        </div>
+        {% block 'text', tag: 'h3', variant: 'type-body-sm', class: 'font-medium text-on-surface line-clamp-2' %}{{ 'home.samples.p1_title' | t }}{% endblock %}
+        {% block 'text', variant: 'type-body-sm', class: 'text-accent' %}{{ 189900000 | money }}{% endblock %}
+      </li>
+      <li class="flex flex-col gap-2">
+        <div class="relative overflow-hidden rounded-card bg-surface-secondary aspect-[4/5]">
+          {%- if sample_slate -%}<img src="{{ sample_slate | image_url: width: 1500 }}" width="{{ sample_slate.width }}" height="{{ sample_slate.height }}" alt="{{ 'home.samples.p2_title' | t }}" loading="lazy" class="absolute max-w-none h-auto" style="width:229.4%;left:-122.2%;top:0">{%- endif -%}
+        </div>
+        {% block 'text', tag: 'h3', variant: 'type-body-sm', class: 'font-medium text-on-surface line-clamp-2' %}{{ 'home.samples.p2_title' | t }}{% endblock %}
+        {% block 'text', variant: 'type-body-sm', class: 'text-accent' %}{{ 209900000 | money }}{% endblock %}
+      </li>
+      <li class="flex flex-col gap-2">
+        <div class="relative overflow-hidden rounded-card bg-surface-secondary aspect-[4/5]">
+          {%- if sample_navy -%}<img src="{{ sample_navy | image_url: width: 1500 }}" width="{{ sample_navy.width }}" height="{{ sample_navy.height }}" alt="{{ 'home.samples.p3_title' | t }}" loading="lazy" class="absolute max-w-none h-auto" style="width:229.4%;left:-9.2%;top:0">{%- endif -%}
+        </div>
+        {% block 'text', tag: 'h3', variant: 'type-body-sm', class: 'font-medium text-on-surface line-clamp-2' %}{{ 'home.samples.p3_title' | t }}{% endblock %}
+        {% block 'text', variant: 'type-body-sm', class: 'text-accent' %}{{ 299900000 | money }}{% endblock %}
+      </li>
+      <li class="flex flex-col gap-2">
+        <div class="relative overflow-hidden rounded-card bg-surface-secondary aspect-[4/5]">
+          {%- if sample_cognac -%}<img src="{{ sample_cognac | image_url: width: 2000 }}" width="{{ sample_cognac.width }}" height="{{ sample_cognac.height }}" alt="{{ 'home.samples.p4_title' | t }}" loading="lazy" class="absolute max-w-none h-auto" style="width:340%;left:-120.1%;top:-60.3%">{%- endif -%}
+        </div>
+        {% block 'text', tag: 'h3', variant: 'type-body-sm', class: 'font-medium text-on-surface line-clamp-2' %}{{ 'home.samples.p4_title' | t }}{% endblock %}
+        {% block 'text', variant: 'type-body-sm', class: 'text-accent' %}{{ 149900000 | money }}{% endblock %}
+      </li>
+    </ul>
+  {% endblock %}
+{%- else -%}
+{%- comment -%} The caller owns this collection source: the shell's settings cannot reach its pre-rendered body. Change this expression to swap the whole region; the shell's collection setting binds to it so the editor picker rewrites the handle here. {%- endcomment -%}
+{%- liquid
+  assign featured_collection = collection | default: collections.all
+  assign featured_product_count = 8
+  assign featured_eager_count = 0 | plus: 0
+  assign featured_show_view_all = true
+
+  if featured_product_count < 1
+    assign featured_product_count = 4
+  elsif featured_product_count > 12
+    assign featured_product_count = 12
+  endif
+
+  if featured_eager_count < 0
+    assign featured_eager_count = 0
+  elsif featured_eager_count > 4
+    assign featured_eager_count = 4
+  endif
+
+  assign featured_title = 'home.featured.heading' | t
+  if featured_title == blank
+    assign featured_title = 'collections.placeholder_title' | t
+  endif
+  assign featured_url = featured_collection.url | default: routes.all_products_collection_url
+  assign featured_product_sizes = '(min-width: 1280px) 297px, (min-width: 1024px) calc((100vw - 92px) / 4), (min-width: 768px) calc((100vw - 84px) / 2), calc((100vw - 44px) / 2)'
+-%}
+
+{%- comment -%} This bespoke shell owns its section/background/padding; do not double-wrap it in container. {%- endcomment -%}
+{% block 'featured-collection', collection: featured_collection %}
+  <div class="mb-6 flex items-end justify-between gap-4 max-w-page mx-auto px-margin"><div class="flex w-full items-end justify-between gap-4 border-b border-accent/25 pb-4">
+    <div class="min-w-0">
+      {% block 'text', tag: 'h2', variant: 'type-heading-lg', class: 'text-on-surface' %}{{ featured_title }}{% endblock %}
+    </div>
+    {%- if featured_show_view_all and featured_url != blank -%}
+      {% block 'link', url: featured_url, class: 'shrink-0 text-accent no-underline uppercase tracking-[0.15em] text-xs hover:text-on-surface' %}{{ 'home.featured.view_all' | t }}{% endblock %}
+    {%- endif -%}
+  </div></div>
+
+  {%- comment -%} Match the collection page's cap, gutters, column gaps, and contained paint. {%- endcomment -%}
+  <div class="w-full max-w-page mx-auto px-margin contain-paint">
+    {%- if featured_collection != blank and featured_collection.products_count > 0 -%}
+      <ul role="list" class="grid grid-cols-2 lg:grid-cols-4 gap-x-3 gap-y-8 md:gap-x-4 md:gap-y-10 stagger-fade-in">
+        {% for product in featured_collection.products limit: featured_product_count %}
+          <li>
+            {%- comment -%} The hero owns homepage LCP; other callers may eagerly load one first row (0–4), with high priority only for slot one. {%- endcomment -%}
+            {%- if forloop.index <= featured_eager_count -%}{%- assign lazy_load = false -%}{%- else -%}{%- assign lazy_load = true -%}{%- endif -%}
+            {%- if forloop.first and featured_eager_count > 0 -%}{%- assign fetch_priority = 'high' -%}{%- elsif forloop.index <= featured_eager_count -%}{%- assign fetch_priority = 'low' -%}{%- else -%}{%- assign fetch_priority = 'auto' -%}{%- endif -%}
+            {%- # theme-check-disable-next-line UnknownFilter %}
+            <s-view-event class="block" view-event-trigger="intersect" view-event-payload="{{ product | standard_event_data: 'view', context: 'collection' | escape }}">
+              {%- liquid
+                assign card_variant = product.selected_or_first_available_variant
+                if lazy_load
+                  assign card_loading = 'lazy'
+                else
+                  assign card_loading = 'eager'
+                endif
+                assign card_image_attributes = 'loading="' | append: card_loading | append: '" fetchpriority="' | append: fetch_priority | append: '"'
+              -%}
+              {% block 'card', block.name: 't:blocks.product_card', url: product.url, aria_label: product.title, border_radius: 'rounded-card' %}
+                <a href="{{ product.url | escape }}" class="relative block overflow-hidden rounded-[inherit]" aria-label="{{ product.title | escape }}">
+                  {% block 'image', fallback_image: product.featured_image, aspect_ratio: 'aspect-square', sizes: featured_product_sizes, attributes: card_image_attributes, alt: product.title, seed: forloop.index %}{% endblock %}
+                </a>
+                <div class="flex flex-col gap-0.5">
+                  {% block 'text', variant: 'type-body-sm', tag: 'h3', class: 'font-medium text-on-surface line-clamp-2' %}{{ product.title | escape }}{% endblock %}
+                  {%- comment -%} Text alignment inherits from the shell; the flex price needs its own logical self alignment. {%- endcomment -%}
+                  {% block 'price', price: card_variant.price, compare_at_price: card_variant.compare_at_price, price_min: product.price_min, price_max: product.price_max, class: 'text-sm font-medium self-start group-[.text-center]/card:self-center group-[.text-end]/card:self-end' %}{% endblock %}
+                </div>
+              {% endblock %}
+            </s-view-event>
+          </li>
+        {% endfor %}
+      </ul>
+    {%- else -%}
+      {%- comment -%} Placeholder cards remain selectable even before the store has products. {%- endcomment -%}
+      <ul role="list" class="grid grid-cols-2 lg:grid-cols-4 gap-x-3 gap-y-8 md:gap-x-4 md:gap-y-10 stagger-fade-in">
+        {% for placeholder_index in (1..featured_product_count) %}
+          <li>
+            {%- assign placeholder_title = 'product.placeholder_title' | t -%}
+            {% block 'card', block.name: 't:blocks.product_card', url: routes.root_url, aria_label: placeholder_title, border_radius: 'rounded-card' %}
+              <a href="{{ routes.root_url | escape }}" class="relative block overflow-hidden rounded-[inherit]" aria-label="{{ placeholder_title | escape }}">
+                {% block 'image', aspect_ratio: 'aspect-square', sizes: featured_product_sizes, alt: placeholder_title, seed: placeholder_index %}{% endblock %}
+              </a>
+              <div class="flex flex-col gap-0.5">
+                {% block 'text', variant: 'type-body-sm', tag: 'h3', class: 'font-medium text-on-surface line-clamp-2' %}{{ placeholder_title | escape }}{% endblock %}
+              </div>
+            {% endblock %}
+          </li>
+        {% endfor %}
+      </ul>
+    {%- endif -%}
+  </div>
+{% endblock %}
+{%- endif -%}
+
+{% block 'container', class: 'w-full max-w-page mx-auto px-margin pt-6 pb-12 md:pb-16', attributes: 'aria-labelledby="home-story-heading"' %}
+  <div class="grid items-center gap-8 overflow-hidden rounded-card border border-accent/25 bg-surface-secondary md:grid-cols-2 md:gap-0">
+    <div class="aspect-[4/3] overflow-hidden md:aspect-auto md:h-full md:min-h-[28rem]">
+      {%- assign story_alt = 'home.story.title' | t -%}
+      {% block 'image', fallback_image: story_image, alt: story_alt, sizes: '(min-width: 768px) 50vw, 100vw', seed: 5, attributes: 'loading="lazy"' %}{% endblock %}
+    </div>
+    <div class="flex flex-col items-center gap-4 px-6 pb-10 text-center md:items-start md:px-14 md:py-16 md:text-start">
+      {% block 'text', variant: 'type-overline', class: 'text-accent tracking-[0.3em]' %}
+        {{- 'home.story.eyebrow' | t -}}
+      {% endblock %}
+      {% block 'text', tag: 'h2', variant: 'type-heading-xl', class: 'text-on-surface', attributes: 'id="home-story-heading"' %}
+        {{- 'home.story.title' | t -}}
+      {% endblock %}
+      {% block 'text', variant: 'type-body', class: 'max-w-md text-on-surface/80' %}
+        {{- 'home.story.body' | t -}}
+      {% endblock %}
+      {% block 'button', url: shop_url, variant: 'button-outline', class: 'mt-2 h-12 px-8 rounded-button text-xs uppercase tracking-[0.2em]' %}
+        {{- 'home.story.cta' | t -}}
+      {% endblock %}
+    </div>
+  </div>
+{% endblock %}
+
+{%- comment -%} Brand social strip. Profile URLs live here; display text lives in locales (home.social.*). {%- endcomment -%}
+{%- liquid
+  assign instagram_url = 'https://www.instagram.com/wyh.official/'
+  assign twitter_url = 'https://x.com/wyh_official'
+  assign instagram_network = 'home.social.instagram' | t
+  assign instagram_handle = 'home.social.instagram_handle' | t
+  assign twitter_network = 'home.social.twitter' | t
+  assign twitter_handle = 'home.social.twitter_handle' | t
+  assign instagram_label = 'home.social.opens_new_tab' | t: network: instagram_network, handle: instagram_handle
+  assign twitter_label = 'home.social.opens_new_tab' | t: network: twitter_network, handle: twitter_handle
+  assign social_link_class = 'group w-full justify-center gap-3 rounded-button border border-accent/40 px-6 py-3 no-underline text-on-surface hover:border-accent hover:text-accent md:w-auto'
+-%}
+{% block 'container', class: 'w-full max-w-page mx-auto px-margin pb-24 md:pb-24', attributes: 'aria-labelledby="home-social-heading"' %}
+  <div class="flex flex-col items-center gap-4 border-y border-accent/25 py-12 text-center md:py-16">
+    {% block 'text', variant: 'type-overline', class: 'text-accent tracking-[0.3em]' %}
+      {{- 'home.social.eyebrow' | t -}}
+    {% endblock %}
+    {% block 'text', tag: 'h2', variant: 'type-heading-xl', class: 'text-on-surface', attributes: 'id="home-social-heading"' %}
+      {{- 'home.social.title' | t -}}
+    {% endblock %}
+    {% block 'text', variant: 'type-body', class: 'max-w-md text-on-surface/80' %}
+      {{- 'home.social.body' | t -}}
+    {% endblock %}
+
+    <ul role="list" class="mt-4 flex w-full flex-col items-center gap-3 md:w-auto md:flex-row md:gap-4">
+      <li class="w-full md:w-auto">
+        {%- capture instagram_attrs -%}target="_blank" rel="noopener" aria-label="{{ instagram_label | escape }}"{%- endcapture -%}
+        {% block 'link', url: instagram_url, class: social_link_class, attributes: instagram_attrs %}
+          <svg aria-hidden="true" focusable="false" class="size-5 text-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4.2"/><circle cx="17.4" cy="6.6" r="1" fill="currentColor" stroke="none"/></svg>
+          <span class="text-sm tracking-[0.08em]">{{ instagram_handle }}</span>
+        {% endblock %}
+      </li>
+      <li class="w-full md:w-auto">
+        {%- capture twitter_attrs -%}target="_blank" rel="noopener" aria-label="{{ twitter_label | escape }}"{%- endcapture -%}
+        {% block 'link', url: twitter_url, class: social_link_class, attributes: twitter_attrs %}
+          <svg aria-hidden="true" focusable="false" class="size-5 text-accent" viewBox="0 0 24 24" fill="currentColor"><path d="M17.75 3h3.07l-6.7 7.66L22 21h-6.17l-4.83-6.32L5.47 21H2.4l7.17-8.2L2 3h6.33l4.37 5.78L17.75 3Zm-1.08 16.2h1.7L7.4 4.73H5.58L16.67 19.2Z"/></svg>
+          <span class="text-sm tracking-[0.08em]">{{ twitter_handle }}</span>
+        {% endblock %}
+      </li>
+    </ul>
+
+    {% block 'text', variant: 'type-overline', class: 'mt-4 text-accent tracking-[0.3em]' %}
+      {{- 'home.social.website' | t -}}
+    {% endblock %}
+  </div>
+{% endblock %}
+
+
