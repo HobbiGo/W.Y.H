@@ -1,0 +1,46 @@
+
+{% layout none %}
+
+<!doctype html>
+<html lang="{{ request.locale.iso_code }}" dir="{{ request.locale.direction | default: 'ltr' }}">
+  <head>
+    {% render 'meta-tags' %}
+    {{ 'styles.min.css' | asset_url | stylesheet_tag: preload: true }}
+    {% comment %} Self-shelled template: must render the settings bridge itself so merchant palette/font/radius settings apply here too. {% endcomment %}
+    {% render 'theme-styles' %}
+    {{ content_for_header }}
+  </head>
+
+  <body class="flex min-h-svh flex-col bg-surface font-body text-on-surface antialiased">
+    {% render 'skip-link' %}
+    <main
+      class="flex flex-1 items-center justify-center [padding-block-end:max(3rem,var(--safe-area-inset-bottom))] [padding-block-start:max(3rem,var(--safe-area-inset-top))]"
+      id="main-content"
+      tabindex="-1"
+    >
+      {% block 'container', class: 'mx-auto w-full max-w-3xl px-margin' %}
+        {%- liquid
+          assign gift_card_root_id = 'gift-card-redemption'
+          assign gift_card_code_id = 'gift-card-redemption-code'
+          assign gift_card_unusable = false
+          if gift_card.enabled == false or gift_card.expired
+            assign gift_card_unusable = true
+          endif
+        -%}
+        {% block 'gift-card', id: gift_card_root_id %}
+          <div class="mx-auto mt-8 grid w-full max-w-xs grid-cols-2 gap-3" data-gift-card-actions>
+            {%- capture copy_attributes -%}aria-describedby="{{ gift_card_code_id | escape }}"{%- endcapture -%}
+            {%- comment -%} The soft 1px outline preserves the secondary action treatment without the 2px variant default. {%- endcomment -%}
+            {% block 'button', commandfor: gift_card_root_id, command: '--copy-code', disabled: gift_card_unusable, variant: 'button-outline', class: 'min-h-12 w-full rounded-button border border-on-surface/30 p-3 text-center text-sm leading-tight text-on-surface wrap-anywhere hover:border-on-surface', attributes: copy_attributes %}{{ 'gift_card.copy_code' | t }}{% endblock %}
+            {% block 'button', url: routes.root_url, variant: 'button-primary', class: 'min-h-12 w-full rounded-button p-3 text-center text-sm leading-tight wrap-anywhere' %}{{ 'gift_card.start_shopping' | t }}{% endblock %}
+          </div>
+        {% endblock %}
+      {% endblock %}
+    </main>
+
+    {% render 'command-polyfill' %}
+    <script type="module" src="{{ 's-gift-card.js' | asset_url }}"></script>
+  </body>
+</html>
+
+

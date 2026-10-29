@@ -1,0 +1,47 @@
+
+{% block 'container' %}
+  <div class="py-12">
+    <div class="max-w-page mx-auto px-margin">
+      {% block 'text', tag: 'h1', variant: 'type-heading-xl', class: 'text-on-surface mb-8' %}{{ 'collections.all_collections' | t }}{% endblock %}
+      <h2 class="sr-only">{{ 'collections.browse_heading' | t }}</h2>
+    </div>
+
+    {% comment %} Unpaginated for-loops cap at 50 items, so paginate keeps every collection reachable on stores with more than 50. {% endcomment %}
+    {% paginate collections by 24 %}
+      {%- if collections.size > 0 -%}
+        {% comment %} Three-column slots subtract the page gutters and 4px gaps; mirror in snippets/lcp-preload.liquid. {% endcomment %}
+        {%- assign collection_sizes = '(min-width: 1280px) calc(1192px / 3), (min-width: 1024px) calc((100vw - 88px) / 3), (min-width: 768px) calc((100vw - 84px) / 2), calc(100vw - 32px)' -%}
+        <div class="w-full max-w-page mx-auto px-margin">
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-1 gap-y-10 stagger-fade-in">
+            {% for collection in collections %}
+              {% comment %} forloop.index resets per paginated page, so the first grid row stays eager on every page. {% endcomment %}
+              {%- if forloop.index <= 3 -%}{%- assign col_lazy = false -%}{%- else -%}{%- assign col_lazy = true -%}{%- endif -%}
+              {%- if forloop.first -%}{%- assign fetch_priority = 'high' -%}{%- else -%}{%- assign fetch_priority = 'auto' -%}{%- endif -%}
+              {%- assign card_collection = collection -%}
+              {%- assign card_url = card_collection.url | default: routes.root_url -%}
+              {%- if card_collection -%}{%- assign card_title = card_collection.title -%}{%- else -%}{%- assign card_title = 'collections.placeholder_title' | t -%}{%- endif -%}
+              {%- assign card_image = card_collection.image | default: card_collection.products.first.featured_image -%}
+              {%- if col_lazy -%}{%- assign image_loading = 'lazy' -%}{%- else -%}{%- assign image_loading = 'eager' -%}{%- endif -%}
+              {%- capture image_attributes -%}loading="{{ image_loading }}" fetchpriority="{{ fetch_priority }}"{%- endcapture -%}
+              {% block 'card', block.name: 't:blocks.collection_card', url: card_url, aria_label: card_title, alignment: 'text-start', border_radius: 'rounded-card' %}
+                <a href="{{ card_url | escape }}" class="relative block overflow-hidden rounded-[inherit]" aria-label="{{ card_title | escape }}">
+                  {% block 'image', fallback_image: card_image, aspect_ratio: 'aspect-square', sizes: collection_sizes, attributes: image_attributes, alt: card_title, seed: forloop.index, placeholder_kind: 'collection' %}{% endblock %}
+                </a>
+                <div class="flex flex-col gap-0.5">
+                  {% block 'text', variant: 'type-body-sm', tag: 'h3', class: 'font-medium text-on-surface line-clamp-2' %}{{ card_title | escape }}{% endblock %}
+                </div>
+              {% endblock %}
+            {% endfor %}
+          </div>
+        </div>
+        <div class="max-w-page mx-auto px-margin">
+          {% block 'pagination', paginate: paginate, class: 'mt-12' %}{% endblock %}
+        </div>
+      {%- else -%}
+        {% block 'text', variant: 'type-body', class: 'text-on-surface-secondary text-center py-12 max-w-page mx-auto px-margin' %}{{ 'collections.no_collections' | t }}{% endblock %}
+      {%- endif -%}
+    {% endpaginate %}
+  </div>
+{% endblock %}
+
+

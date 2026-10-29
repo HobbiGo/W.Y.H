@@ -1,0 +1,238 @@
+
+{% block 'container', class: 'w-full max-w-page mx-auto px-margin' %}
+  {%- assign product_title = product.title -%}
+  {%- if product_title == blank -%}
+    {%- assign product_title = 'product.placeholder_title' | t -%}
+  {%- endif -%}
+  {%- # theme-check-disable-next-line UnknownFilter %}
+  <s-view-event class="block pb-4" view-event-trigger="connect" view-event-payload="{{ product | standard_event_data: 'view', context: 'page' | escape }}">
+  {%- comment -%} Product Detail: 60/40 Split {%- endcomment -%}
+  <div class="grid grid-cols-1 product-grid gap-6 md:gap-12 mb-16">
+    {%- comment -%} Left: Image Gallery (60%) {%- endcomment -%}
+    <s-product-image-zoom class="block">
+        {%- liquid
+          # product-grid gives the gallery 2/3 of the width after gutters and the 48px gap.
+          # Mirror this media-count branch in snippets/lcp-preload.liquid; mobile stays full bleed.
+          if product.media.size > 2
+            assign gallery_sizes = '(min-width: 1280px) 384px, (min-width: 768px) calc((100vw - 128px) / 3), 100vw'
+          else
+            assign gallery_sizes = '(min-width: 1280px) 768px, (min-width: 768px) calc((100vw - 128px) * 2 / 3), 100vw'
+          endif
+        -%}
+        {%- comment -%} One media loop scrolls horizontally on mobile and becomes the contained desktop grid. Native media controls own keyboard focus so the desktop gallery adds no redundant tab stop. {%- endcomment -%}
+        <div
+          data-product-gallery
+          {% if product.media != blank %}role="region" aria-label="{{ product_title | escape }}"{% endif %}
+          class="mx-[calc(-1*var(--spacing-margin)-max(0px,(100vw-var(--spacing-page))/2))] w-[calc(100%+2*var(--spacing-margin)+max(0px,100vw-var(--spacing-page)))] flex snap-x snap-mandatory overflow-x-auto scrollbar-none [&::-webkit-scrollbar]:hidden md:mx-0 md:grid md:w-auto md:snap-none md:overflow-visible {% if product.media.size > 2 %}md:grid-cols-2{% endif %}"
+        >
+          {% if product.media == blank %}
+            {% render 'placeholder-texture', kind: 'product', seed: 1, class: 'shrink-0 snap-center w-full aspect-square contain-paint md:aspect-4/5', aria_label: product_title %}
+          {% endif %}
+          {% for media in product.media %}
+            <div class="shrink-0 snap-center w-full contain-paint">
+              {%- if media.media_type == 'image' -%}
+                {%- liquid
+                  assign image_label = media.alt | default: media.preview_image.alt | default: product_title
+                  assign zoom_dialog_id = 'product-image-zoom-' | append: media.id
+                -%}
+                <div class="aspect-square overflow-hidden bg-surface-secondary md:rounded-card md:border md:border-accent/25 {% if product.media.size == 1 %}md:aspect-4/5{% endif %}">
+                  <button
+                    type="button"
+                    commandfor="{{ zoom_dialog_id }}"
+                    command="show-modal"
+                    data-zoom-preload
+                    aria-haspopup="dialog"
+                    aria-controls="{{ zoom_dialog_id }}"
+                    aria-label="{{ 'product.view_image' | t: title: image_label | escape }}"
+                    class="group block size-full cursor-zoom-in bg-surface-secondary p-0 motion-safe:transition-transform motion-safe:active:scale-[0.97] focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent"
+                  >
+                    {%- if forloop.first -%}
+                      {% block 'image', image: media, alt: image_label, sizes: gallery_sizes, class: 'motion-safe:transition-transform motion-safe:duration-300 motion-safe:group-hover:scale-[1.03]', attributes: 'loading="eager" fetchpriority="high"' %}{% endblock %}
+                    {%- else -%}
+                      {% block 'image', image: media, alt: image_label, sizes: gallery_sizes, class: 'motion-safe:transition-transform motion-safe:duration-300 motion-safe:group-hover:scale-[1.03]', attributes: 'loading="lazy"' %}{% endblock %}
+                    {%- endif -%}
+                  </button>
+                </div>
+              {%- elsif media.media_type == 'video' -%}
+                <div class="aspect-square overflow-hidden {% if product.media.size == 1 %}md:aspect-4/5{% endif %}">
+                  {% block 'video', video: media, class: 'size-full object-cover' %}{% endblock %}
+                </div>
+              {%- elsif media.media_type == 'external_video' -%}
+                {%- liquid
+                  assign external_youtube_id = ''
+                  assign external_vimeo_id = ''
+                  if media.host == 'youtube'
+                    assign external_youtube_id = media.external_id
+                  elsif media.host == 'vimeo'
+                    assign external_vimeo_id = media.external_id
+                  endif
+                  assign external_video_label = media.alt | default: media.preview_image.alt | default: product_title
+                -%}
+                <div class="aspect-square overflow-hidden {% if product.media.size == 1 %}md:aspect-4/5{% endif %}">
+                  {% block 'video', youtube_id: external_youtube_id, vimeo_id: external_vimeo_id, class: 'size-full object-cover' %}
+                    {%- if forloop.first -%}
+                      {% block 'image', fallback_image: media.preview_image, alt: external_video_label, sizes: gallery_sizes, placeholder_kind: 'surface', attributes: 'loading="eager" fetchpriority="high"' %}{% endblock %}
+                    {%- else -%}
+                      {% block 'image', fallback_image: media.preview_image, alt: external_video_label, sizes: gallery_sizes, placeholder_kind: 'surface', attributes: 'loading="lazy"' %}{% endblock %}
+                    {%- endif -%}
+                  {% endblock %}
+                </div>
+              {%- endif -%}
+            </div>
+          {% endfor %}
+        </div>
+
+        {%- assign zoom_widths = '750,1100,1500,2000,2400' | split: ',' -%}
+        {% for media in product.media %}
+          {%- if media.media_type == 'image' -%}
+            {%- liquid
+              assign zoom_image = media.preview_image | default: media
+              assign image_label = media.alt | default: zoom_image.alt | default: product_title
+              assign zoom_dialog_id = 'product-image-zoom-' | append: media.id
+              assign zoom_title_id = zoom_dialog_id | append: '-title'
+            -%}
+            {%- capture zoom_srcset -%}
+              {%- for width in zoom_widths -%}
+                {%- assign image_width = width | strip | plus: 0 -%}
+                {{ zoom_image | image_url: width: image_width }} {{ image_width }}w{%- unless forloop.last -%},{%- endunless -%}
+              {%- endfor -%}
+            {%- endcapture -%}
+
+            {%- comment -%} Gallery commands open a full-bleed, fade-only surface: no closed transform and no extra backdrop dimming. {%- endcomment -%}
+            <s-dialog>
+              <dialog id="{{ zoom_dialog_id }}" class="overlay-panel [--panel-backdrop:transparent] fixed inset-0 w-screen h-dvh rounded-none bg-overlay text-surface shadow-none" aria-labelledby="{{ zoom_title_id }}">
+                <div class="relative flex size-full items-center justify-center">
+                  <h2 id="{{ zoom_title_id }}" class="sr-only">{{ 'product.image_zoom' | t }}</h2>
+                  {%- comment -%} Zoom media stays full bleed; only the close control moves inside the safe viewport. {%- endcomment -%}
+                  {%- capture zoom_close_button_attrs -%}aria-label="{{ 'general.close' | t | escape }}"{%- endcapture -%}
+                  {% block 'button', commandfor: zoom_dialog_id, command: 'close', variant: 'button-ghost', class: 'absolute z-10 size-touch-target rounded-full bg-overlay-subtle text-surface hover:bg-overlay-strong inset-bs-[max(1rem,var(--safe-area-inset-top))] inset-e-[max(1rem,var(--safe-area-inset-inline-end))]', attributes: zoom_close_button_attrs %}<span class="inline-flex items-center justify-center shrink-0 size-5" aria-hidden="true">{{- 'icon-x.svg' | inline_asset_content -}}</span>{% endblock %}
+                  <img
+                    src="{{ zoom_image | image_url: width: 1500 }}"
+                    srcset="{{ zoom_srcset | strip }}"
+                    sizes="100vw"
+                    loading="lazy"
+                    alt="{{ image_label | escape }}"
+                    width="{{ zoom_image.width }}"
+                    height="{{ zoom_image.height }}"
+                    class="size-full object-contain"
+                    data-zoom-image
+                  >
+                </div>
+              </dialog>
+            </s-dialog>
+          {%- endif -%}
+        {% endfor %}
+      </s-product-image-zoom>
+      <script type="module" src="{{ 's-product-image-zoom.js' | asset_url }}"></script>
+
+    {%- comment -%} Right: Product Information (40%) {%- endcomment -%}
+    {%- comment -%} The product-title and product-form partials declared below are fetched by s-variant-picker.js on product-page variant changes — keep both partial names stable. {%- endcomment -%}
+    {%- assign current_variant = product.selected_or_first_available_variant -%}
+
+    <div class="flex flex-col gap-6 md:sticky md:top-8 md:self-start">
+      {% partial 'product-title' %}
+      <div class="pt-4 md:pt-8">
+        {% if product.vendor != blank %}
+          {% block 'text', variant: 'type-overline', class: 'text-accent mb-3 uppercase tracking-[0.3em]' %}<bdi>{{ product.vendor | escape }}</bdi>{% endblock %}
+        {% endif %}
+        {% block 'text', tag: 'h1', variant: 'type-display', class: 'text-on-surface' %}{{ product_title | escape }}{% endblock %}
+        <div class="mt-4" data-product-price>
+          {% block 'price', price: current_variant.price, compare_at_price: current_variant.compare_at_price, variant: 'type-body-lg', class: 'font-medium' %}{% endblock %}
+        </div>
+      </div>
+      {% endpartial %}
+
+      {%- comment -%} === PRODUCT FORM (commerce-critical) ===
+        This {% partial 'product-form' %} region is swapped by s-variant-picker.js on variant change.
+        The partial name, the {% form %} tag, and the hidden input[name="id"] are all load-bearing —
+        removing or renaming any of them breaks add-to-cart and variant switching.
+        <s-product-form> wraps the form so add-to-cart calls Shopify.actions.updateCart
+        with the selected variant/quantity while preserving the native product form
+        action as the no-JS fallback. standard-actions-override.js keeps the cart
+        update on-page by refreshing <s-cart> partials; <s-product-form> then opens
+        the drawer with Shopify.actions.openCart(). {%- endcomment -%}
+      <s-product-form class="block" data-product-form data-product-id="{{ product.id }}" data-error-message="{{ 'cart.update_error' | t | escape }}">
+        {% partial 'product-form' %}
+        {%- comment -%} Read by s-variant-picker.js to resolve the ProductSelectEvent promise
+          with the freshly-selected variant. Re-rendered inside the 'product-form' partial
+          on every variant change so the next read returns the new variant's data.
+          standard_event_data encodes the less-than character as <, so a literal
+          closing-script in product metafields cannot terminate this tag early. {%- endcomment -%}
+        {%- # theme-check-disable UnknownFilter %}
+        <script type="application/json" data-product-view-payload>{{ product | standard_event_data: 'view' }}</script>
+        {%- # theme-check-enable UnknownFilter %}
+        {%- assign product_form_error_id = 'product-form-error-' | append: product.id -%}
+        {% form 'product', product %}
+          {% if product.variants.size > 1 %}
+            <s-variant-picker class="block space-y-4" data-updated-message="{{ 'accessibility.variant_updated' | t }}" data-error-message="{{ 'accessibility.update_error' | t | escape }}" data-product-id="{{ product.id }}" data-product-title="{{ product.title | escape }}" data-product-handle="{{ product.handle }}">
+              {%- for option in product.options_with_values -%}
+                {%- block 'variant-picker', product: product, option: option, show_selected_value: true -%}{%- endblock -%}
+              {%- endfor -%}
+              {%- comment -%} Variant refresh feedback stays separate from the add-to-cart error owned by s-product-form. {%- endcomment -%}
+              <p data-variant-picker-error hidden class="text-sm text-sale">{{ 'accessibility.update_error' | t }}</p>
+            </s-variant-picker>
+          {% endif %}
+          {%- comment -%} The sole submitted variant ID stays in the partial across selector styles and single-variant products; s-variant-picker updates it on change. {%- endcomment -%}
+          <input type="hidden" name="id" value="{{ current_variant.id }}">
+
+          <div class="flex items-center gap-4 mb-10">
+            <div class="shrink-0">
+              <label for="product-quantity" class="text-sm font-medium text-on-surface mb-2 block">{{ 'product.quantity' | t }}</label>
+              {%- liquid
+                assign qty_min = current_variant.quantity_rule.min | default: 1
+                assign qty_max = current_variant.quantity_rule.max
+                assign qty_step = current_variant.quantity_rule.increment | default: 1
+              -%}
+              {% block 'quantity-selector', id: 'product-quantity', name: 'quantity', value: qty_min, min: qty_min, max: qty_max, step: qty_step %}{% endblock %}
+            </div>
+          </div>
+
+          {%- if current_variant.available -%}
+            {%- capture add_button_attrs -%}aria-describedby="{{ product_form_error_id }}"{%- endcapture -%}
+            {% block 'button', type: 'submit', name: 'add', variant: 'button-primary', class: 'h-12 px-8 rounded-button w-full text-xs uppercase tracking-[0.2em]', attributes: add_button_attrs %}{{- 'product.add_to_cart' | t -}}{% endblock %}
+          {%- else -%}
+            {%- comment -%}
+              type="button" prevents keyboard form submission when sold out; aria-disabled is set by the block.
+              That leaves no signal the button block can read, so inert states the placeholder has no destination.
+            {%- endcomment -%}
+            {% block 'button', type: 'button', inert: true, variant: 'button-primary', class: 'h-12 px-8 rounded-button w-full text-xs uppercase tracking-[0.2em]', disabled: true %}{{- 'product.sold_out' | t -}}{% endblock %}
+          {%- endif -%}
+
+          <p id="{{ product_form_error_id }}" data-add-to-cart-error role="alert" hidden class="mt-3 text-sm text-sale"></p>
+
+          <div class="mt-3 [--shopify-accelerated-checkout-button-block-size:var(--spacing-touch-target)] [--shopify-accelerated-checkout-button-border-radius:var(--radius-button)] [--shopify-accelerated-checkout-button-box-shadow:none] [--shopify-accelerated-checkout-skeleton-background-color:var(--color-surface-secondary)]">
+            {{ form | payment_button }}
+          </div>
+        {% endform %}
+
+        {% endpartial %}
+      </s-product-form>
+
+      {%- comment -%} Product Description {%- endcomment -%}
+      {%- comment -%} Unconditional sr-only h2 ensures heading hierarchy is valid even when no description exists, preserving the semantic outline across all product pages {%- endcomment -%}
+      <h2 class="sr-only">{{ 'product.details' | t }}</h2>
+
+      {%- comment -%} Brand promise row: three independently editable lines between the buy box and the description. {%- endcomment -%}
+      <ul role="list" class="grid grid-cols-3 gap-2 border-y border-accent/25 py-4 text-center">
+        <li>{% block 'text', variant: 'type-body-sm', class: 'text-on-surface/80 uppercase tracking-[0.12em] text-[11px]' %}{{ 'product.highlight_leather' | t }}{% endblock %}</li>
+        <li class="border-x border-accent/25">{% block 'text', variant: 'type-body-sm', class: 'text-on-surface/80 uppercase tracking-[0.12em] text-[11px]' %}{{ 'product.highlight_craft' | t }}{% endblock %}</li>
+        <li>{% block 'text', variant: 'type-body-sm', class: 'text-on-surface/80 uppercase tracking-[0.12em] text-[11px]' %}{{ 'product.highlight_heritage' | t }}{% endblock %}</li>
+      </ul>
+
+      {% if product.description != blank %}
+        <div>
+          {%- assign description_label = 'product.description' | t -%}
+          <h3 class="mb-4 text-xs font-medium uppercase tracking-[0.2em] text-accent">{{ description_label | escape }}</h3>
+          {%- comment -%} The schema-backed setting keeps the product description connected as rich text instead of flattening its internal treatments through the text block. {%- endcomment -%}
+          {% block 'richtext', text: product.description, class: 'text-sm' %}{% endblock %}
+        </div>
+      {% endif %}
+    </div>
+  </div>
+  </s-view-event>
+
+  <script type="module" src="{{ 's-variant-picker.js' | asset_url }}"></script>
+  <script type="module" src="{{ 's-product-form.js' | asset_url }}"></script>
+{% endblock %}
+
+

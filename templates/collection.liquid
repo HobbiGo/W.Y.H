@@ -1,0 +1,92 @@
+
+{% block 'container' %}
+  {%- # theme-check-disable-next-line UnknownFilter %}
+  <s-view-event class="block py-12" view-event-trigger="connect" view-event-payload="{{ collection | standard_event_data: 'view' | escape }}">
+  <div class="max-w-page mx-auto px-margin">
+  <div class="mb-10 flex flex-col items-center gap-3 border-b border-accent/25 pb-8 text-center md:mb-12 md:pb-10">
+    {% block 'text', variant: 'type-overline', class: 'text-accent tracking-[0.3em]' %}{{ 'collections.eyebrow' | t }}{% endblock %}
+    {% block 'text', tag: 'h1', variant: 'type-heading-xl', class: 'text-on-surface' %}{{ collection.title | escape }}{% endblock %}
+    {% if collection.description != blank %}
+      <div class="richtext max-w-2xl text-on-surface/80">{{ collection.description }}</div>
+    {% endif %}
+  </div>
+</div>
+
+<s-live-form class="block" partial="collection-count,collection-chips,collection-filters,collection-grid" debounce="300" data-collection-id="{{ collection.id }}" data-collection-handle="{{ collection.handle | escape }}" data-updated-message="{{ 'accessibility.results_updated' | t }}" data-error-message="{{ 'accessibility.update_error' | t }}">
+  <form action="{{ collection.url }}" method="get" role="search" aria-label="{{ 'collections.filter' | t }}">
+    {% capture collection_filter_trigger %}
+      {% block 'button', commandfor: 'collection-filter-drawer', command: 'show-modal', variant: 'button-outline', class: 'h-11 px-4 text-sm rounded-button' %}{{ 'collections.filter' | t }}{% endblock %}
+    {% endcapture %}
+    {% capture collection_toolbar_submit %}
+      {% block 'button', type: 'submit', class: 'h-11 px-4 rounded-button' %}{{ 'collections.show_results' | t }}{% endblock %}
+    {% endcapture %}
+
+    {% capture collection_filter_close_button %}
+      {%- capture close_attrs -%}aria-label="{{ 'general.close' | t }}"{%- endcapture -%}
+      {% block 'button', commandfor: 'collection-filter-drawer', command: 'close', variant: 'button-ghost', class: 'size-touch-target rounded', autofocus: true, attributes: close_attrs %}<span class="inline-flex items-center justify-center size-5" aria-hidden="true">{{- 'icon-x.svg' | inline_asset_content -}}</span>{% endblock %}
+    {% endcapture %}
+    {% capture collection_results_button %}
+      {% block 'button', commandfor: 'collection-filter-drawer', command: 'close', variant: 'button-primary', class: 'h-11 w-full rounded-button' %}{{ 'collections.show_results' | t }}{% endblock %}
+    {% endcapture %}
+    {% capture collection_drawer_submit %}
+      {% block 'button', type: 'submit', class: 'h-11 w-full rounded-button' %}{{ 'collections.show_results' | t }}{% endblock %}
+    {% endcapture %}
+    {% render 'filters', page_type: 'collection', resource: collection, drawer_id: 'collection-filter-drawer', filter_trigger: collection_filter_trigger, toolbar_submit: collection_toolbar_submit, close_button: collection_filter_close_button, show_results_button: collection_results_button, drawer_submit: collection_drawer_submit %}
+
+    {% partial 'collection-grid' %}
+{% paginate collection.products by 20 %}
+  {% if collection.products.size > 0 %}
+    <h2 class="sr-only">{{ 'collections.products_heading' | t }}</h2>
+    {%- comment -%} Account for the 1280px page cap, 16/40px gutters, and 4px column gaps; mirror in snippets/lcp-preload.liquid. {%- endcomment -%}
+    {%- assign product_sizes = '(min-width: 1280px) 290px, (min-width: 1024px) calc((100vw - 152px) / 4), (min-width: 768px) calc((100vw - 104px) / 2), calc((100vw - 44px) / 2)' -%}
+    <div class="w-full max-w-page mx-auto px-margin contain-paint">
+      <ul id="product-grid" role="list" class="grid grid-cols-2 lg:grid-cols-4 gap-x-3 gap-y-8 md:gap-x-6 md:gap-y-10 mb-8 stagger-fade-in">
+        {% for product in collection.products %}
+          <li>
+            {%- comment -%} The four-slot eager threshold matches one large-screen row; only slot one competes at high priority for LCP, while the remaining eager row stays low priority. {%- endcomment -%}
+            {%- if forloop.index <= 4 -%}{%- assign lazy_load = false -%}{%- else -%}{%- assign lazy_load = true -%}{%- endif -%}
+            {%- if forloop.first -%}{%- assign fetch_priority = 'high' -%}{%- elsif forloop.index <= 4 -%}{%- assign fetch_priority = 'low' -%}{%- else -%}{%- assign fetch_priority = 'auto' -%}{%- endif -%}
+            {%- # theme-check-disable-next-line UnknownFilter %}
+            <s-view-event class="block" view-event-trigger="intersect" view-event-payload="{{ product | standard_event_data: 'view', context: 'collection' | escape }}">
+              {%- liquid
+                assign card_variant = product.selected_or_first_available_variant
+                if lazy_load
+                  assign card_loading = 'lazy'
+                else
+                  assign card_loading = 'eager'
+                endif
+                assign card_image_attributes = 'loading="' | append: card_loading | append: '" fetchpriority="' | append: fetch_priority | append: '"'
+              -%}
+              {% block 'card', block.name: 't:blocks.product_card', url: product.url, aria_label: product.title, border_radius: 'rounded-card', class: 'h-full gap-3 border border-accent/25 bg-surface-secondary p-2 pb-4 hover:border-accent/70 motion-safe:transition-colors md:p-3 md:pb-5' %}
+                <a href="{{ product.url | escape }}" class="relative block overflow-hidden rounded-[calc(var(--radius-card)-4px)]" aria-label="{{ product.title | escape }}">
+                  {% block 'image', fallback_image: product.featured_image, aspect_ratio: 'aspect-[4/5]', sizes: product_sizes, attributes: card_image_attributes, alt: product.title, seed: forloop.index %}{% endblock %}
+                </a>
+                <div class="flex flex-col gap-1 px-1">
+                  {% block 'text', variant: 'type-body-sm', tag: 'h3', class: 'font-medium text-on-surface line-clamp-2' %}{{ product.title | escape }}{% endblock %}
+                  {%- comment -%} Text alignment inherits from the shell; the flex price needs its own logical self alignment. {%- endcomment -%}
+                  {% block 'price', price: card_variant.price, compare_at_price: card_variant.compare_at_price, price_min: product.price_min, price_max: product.price_max, class: 'text-sm font-medium self-start group-[.text-center]/card:self-center group-[.text-end]/card:self-end' %}{% endblock %}
+                </div>
+              {% endblock %}
+            </s-view-event>
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
+    <div class="max-w-page mx-auto px-margin">
+      {% block 'pagination', paginate: paginate %}{% endblock %}
+    </div>
+  {% else %}
+    {% block 'text', variant: 'type-body', class: 'text-on-surface-secondary py-12 text-center max-w-page mx-auto px-margin' %}{{ 'collections.no_products' | t }}{% endblock %}
+  {% endif %}
+{% endpaginate %}
+    {% endpartial %}
+  </form>
+</s-live-form>
+</s-view-event>
+
+<script type="application/ld+json">
+  {{ collection | structured_data }}
+</script>
+{% endblock %}
+
+

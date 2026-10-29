@@ -1,0 +1,156 @@
+
+<script type="application/ld+json">{{ article | structured_data }}</script>
+
+{% block 'container', class: 'w-full max-w-page mx-auto px-margin' %}
+  <article class="max-w-prose mx-auto py-12">
+    <header class="mb-8">
+      {% block 'text', tag: 'h1', variant: 'type-display', class: 'mb-4' %}{{ article.title | escape }}{% endblock %}
+      {%- assign article_date = article.published_at | date: format: 'date' -%}
+      {%- assign article_datetime = article.published_at | date: '%Y-%m-%d' -%}
+      {%- assign escaped_author = article.author | escape -%}
+
+      {%- comment -%} The `_html` metadata translations own the semantic `<time>`; the text block renders its content raw so that element survives the selectable wrapper. {%- endcomment -%}
+      {% block 'text', variant: 'type-body', class: 'text-on-surface-secondary' %}{% if article.author %}{{ 'blog.article_metadata_html' | t: date: article_date, datetime: article_datetime, author: escaped_author }}{% else %}{{ 'blog.article_metadata_no_author_html' | t: date: article_date, datetime: article_datetime }}{% endif %}{% endblock %}
+    </header>
+
+    {% if article.image %}
+      <div class="mb-8">
+        {%- assign article_image_alt = article.image.alt | default: article.title -%}
+
+        {%- comment -%} The `sizes` kwarg is mirrored by the article LCP preload imagesizes in layout/theme.liquid — keep both byte-identical. {%- endcomment -%}
+        {% block 'image', image: article.image, sizes: '(min-width: 768px) 42em, 100vw', attributes: 'loading="eager" fetchpriority="high"', alt: article_image_alt, class: 'aspect-landscape' %}{% endblock %}
+      </div>
+    {% endif %}
+
+    {%- if article.content != blank -%}
+      {%- comment -%} The schema-backed setting keeps the article body connected as one richtext presentation block instead of decomposing its authored HTML into per-element text blocks. {%- endcomment -%}
+      {% block 'richtext', text: article.content %}{% endblock %}
+    {%- endif -%}
+
+    {%- comment -%}Comments section{%- endcomment -%}
+    {% if blog.comments_enabled? %}
+      <hr class="my-12 border-border">
+      <section class="mt-8">
+        {% block 'text', tag: 'h2', variant: 'type-heading-xl', class: 'mb-8' %}{{ 'blog.comments_count' | t: count: article.comments_count }}{% endblock %}
+
+        {% paginate article.comments by 10 %}
+          {% for comment in article.comments %}
+            <div class="py-6{% unless forloop.last %} border-b border-border{% endunless %}">
+              <div class="flex items-center gap-2 mb-2">
+                {% block 'text', variant: 'type-body', class: 'font-medium text-on-surface' %}{{ comment.author | escape }}{% endblock %}
+                <span class="text-on-surface-secondary" aria-hidden="true">&middot;</span>
+                <time datetime="{{ comment.created_at | date: '%Y-%m-%dT%H:%M:%S%z' }}" class="text-sm text-on-surface-secondary">
+                  {{ comment.created_at | date: format: 'date' }}
+                </time>
+              </div>
+              <div class="text-on-surface">{{ comment.content | escape | newline_to_br }}</div>
+            </div>
+          {% endfor %}
+
+          {% block 'pagination', paginate: paginate %}{% endblock %}
+        {% endpaginate %}
+
+        {% form 'new_comment', article %}
+          {%- if form.errors -%}
+            <div role="alert" class="flex items-start gap-3 p-4 rounded-lg border-s-4 border-s-critical bg-critical/10 text-on-surface mb-4">
+              <div class="flex-1">
+                <p class="type-body font-medium mb-1">{{ 'forms.form_errors_title' | t }}</p>
+                <ul class="text-sm list-disc ps-4">
+                  {% for field in form.errors %}
+                    <li>{{ form.errors.translated_fields[field] | escape }} {{ form.errors.messages[field] | escape }}</li>
+                  {% endfor %}
+                </ul>
+              </div>
+            </div>
+
+            {%- for field in form.errors -%}
+              {%- capture field_error_message -%}{{ form.errors.translated_fields[field] }} {{ form.errors.messages[field] }}{%- endcapture -%}
+              {%- case field -%}
+                {%- when 'author' -%}
+                  {%- assign comment_name_error = field_error_message -%}
+                {%- when 'email' -%}
+                  {%- assign comment_email_error = field_error_message -%}
+                {%- when 'body' -%}
+                  {%- assign comment_body_error = field_error_message -%}
+              {%- endcase -%}
+            {%- endfor -%}
+          {%- endif -%}
+
+          <div class="flex flex-col gap-4 mt-8 max-w-md">
+            {% block 'text', tag: 'h3', variant: 'type-body-lg' %}{{ 'blog.comment_form_title' | t }}{% endblock %}
+
+            {%- assign comment_name_label = 'blog.comment_form_name' | t -%}
+            {%- assign comment_email_label = 'blog.comment_form_email' | t -%}
+            {%- assign comment_body_label = 'blog.comment_form_body' | t -%}
+
+            {%- comment -%} Comment form repopulation with form.author and form.email {%- endcomment -%}
+            <div class="space-y-1.5">
+              <label for="comment-name" class="block text-sm font-medium text-on-surface">
+                {{- comment_name_label | escape -}}
+                <span class="text-critical ms-0.5" aria-hidden="true">*</span><span class="sr-only"> ({{ 'forms.required' | t }})</span>
+              </label>
+              <input
+                type="text"
+                name="comment[author]"
+                id="comment-name"
+                class="w-full"
+                {%- if form.author != blank %} value="{{ form.author | escape }}"{% endif %}
+                autocomplete="name"
+                required
+                aria-required="true"
+                {%- if comment_name_error != blank %} aria-invalid="true" aria-describedby="comment-name-error"{% endif %}
+              >
+              {%- if comment_name_error != blank -%}
+                <p id="comment-name-error" class="text-sm text-critical" role="alert">{{ comment_name_error | escape }}</p>
+              {%- endif -%}
+            </div>
+            <div class="space-y-1.5">
+              <label for="comment-email" class="block text-sm font-medium text-on-surface">
+                {{- comment_email_label | escape -}}
+                <span class="text-critical ms-0.5" aria-hidden="true">*</span><span class="sr-only"> ({{ 'forms.required' | t }})</span>
+              </label>
+              <input
+                type="email"
+                name="comment[email]"
+                id="comment-email"
+                class="w-full"
+                {%- if form.email != blank %} value="{{ form.email | escape }}"{% endif %}
+                autocomplete="email"
+                required
+                aria-required="true"
+                {%- if comment_email_error != blank %} aria-invalid="true" aria-describedby="comment-email-error"{% endif %}
+              >
+              {%- if comment_email_error != blank -%}
+                <p id="comment-email-error" class="text-sm text-critical" role="alert">{{ comment_email_error | escape }}</p>
+              {%- endif -%}
+            </div>
+            <div class="space-y-1.5">
+              <label for="comment-body" class="block text-sm font-medium text-on-surface">
+                {{- comment_body_label | escape -}}
+                <span class="text-critical ms-0.5" aria-hidden="true">*</span><span class="sr-only"> ({{ 'forms.required' | t }})</span>
+              </label>
+              <textarea
+                name="comment[body]"
+                id="comment-body"
+                rows="4"
+                class="w-full"
+                required
+                aria-required="true"
+                {%- if comment_body_error != blank %} aria-invalid="true" aria-describedby="comment-body-error"{% endif %}
+              >
+                {%- if form.body != blank %}{{ form.body | escape }}{% endif -%}
+              </textarea>
+              {%- if comment_body_error != blank -%}
+                <p id="comment-body-error" class="text-sm text-critical" role="alert">{{ comment_body_error | escape }}</p>
+              {%- endif -%}
+            </div>
+
+            {% block 'button', type: 'submit' %}{{- 'blog.comment_form_submit' | t -}}{% endblock %}
+          </div>
+        {% endform %}
+      </section>
+    {% endif %}
+  </article>
+{% endblock %}
+
+

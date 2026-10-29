@@ -1,0 +1,14 @@
+
+{% block 'container', class: 'w-full max-w-page mx-auto px-margin' %}
+  <div class="py-12">
+    {% block 'text', tag: 'h1', variant: 'type-heading-xl', class: 'mb-8' %}{{ page.title | escape }}{% endblock %}
+
+    <h2 class="sr-only">{{ 'page.content_heading' | t }}</h2>
+
+    {%- if page.content != blank -%}
+      <div class="richtext">{{ page.content }}</div>
+    {%- endif -%}
+  </div>
+{% endblock %}
+
+

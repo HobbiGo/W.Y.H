@@ -1,0 +1,37 @@
+
+{%- liquid
+  assign default_image = collections.all.products.first.featured_image
+-%}
+
+{% comment %} Reserve breathing room independently of the shared footer's height; longer content can still grow naturally. {% endcomment %}
+{% block 'container', class: 'box-border flex min-h-[80svh] flex-col justify-center w-[min(100%,1500px)] mx-auto [padding-inline-start:max(clamp(24px,4.5vw,72px),var(--safe-area-inset-inline-start))] [padding-inline-end:max(clamp(24px,4.5vw,72px),var(--safe-area-inset-inline-end))]', attributes: 'aria-labelledby="not-found-title"' %}
+  <div class="flex flex-col gap-10 py-[clamp(64px,8svh,128px)] min-[760px]:flex-row min-[760px]:items-center min-[760px]:gap-[clamp(40px,5vw,80px)]">
+    <div class="min-w-0 min-[760px]:basis-0 min-[760px]:grow-[1.5] [--not-found-muted:color-mix(in_oklab,var(--color-on-surface)_62%,var(--color-surface))]">
+      {% block 'text', variant: 'type-overline', class: 'text-[var(--not-found-muted)] pb-[clamp(24px,3vh,40px)]' %}{{ '404.not_found' | t }}{% endblock %}
+
+      {%- capture not_found_title_attributes -%}id="not-found-title" aria-label="{{ '404.title_accessible' | t | escape }}"{%- endcapture -%}
+      {% block 'text', tag: 'h1', variant: 'type-display', class: '[container-type:inline-size] text-start [margin-inline-start:-0.025em] pb-[clamp(24px,3vh,40px)]', attributes: not_found_title_attributes %}
+        {% comment %} Scale the selected text style into a poster, capped to its column so wider fonts and large theme scales still fit. {% endcomment %}
+        <span class="block text-[min(3em,50cqw)] min-[480px]:text-[min(3.5em,50cqw)] min-[640px]:text-[min(5em,50cqw)] min-[760px]:text-[min(4em,50cqw)] min-[960px]:text-[min(5.5em,50cqw)] min-[1200px]:text-[min(6.5em,50cqw)] min-[1440px]:text-[min(8em,50cqw)] leading-[0.8] tracking-[-0.065em]">{{ '404.title' | t }}</span>
+      {% endblock %}
+
+      <div class="mt-6 border-t [border-color:color-mix(in_oklab,var(--color-on-surface)_28%,var(--color-surface))] pt-7 grid gap-7">
+        <div>
+          {% block 'text', tag: 'h2', variant: 'type-heading-lg', class: 'max-w-[24ch]' %}{{ '404.suggestions_heading' | t }}{% endblock %}
+          {% block 'text', variant: 'type-body', class: 'mt-4 max-w-[44ch] text-[var(--not-found-muted)]' %}{{ '404.recovery_body' | t }}{% endblock %}
+        </div>
+
+        {% block 'button', url: routes.all_products_collection_url, variant: 'button-primary', class: 'justify-self-start rounded-button min-h-[50px] px-6 py-3 text-sm leading-[1.35] gap-4' %}
+          <span>{{ '404.back_to_shopping' | t }}</span>
+          <span class="inline-flex size-5 shrink-0 items-center justify-center rtl:-scale-x-100" aria-hidden="true">{{- 'icon-arrow-right.svg' | inline_asset_content -}}</span>
+        {% endblock %}
+      </div>
+    </div>
+
+    <div class="relative overflow-hidden bg-surface-secondary min-h-0 has-[[data-aspect-ratio=aspect-auto]]:aspect-[5/4] min-[760px]:has-[[data-aspect-ratio=aspect-auto]]:aspect-auto min-[760px]:has-[[data-aspect-ratio=aspect-auto]]:self-stretch min-[760px]:has-[[data-aspect-ratio=aspect-auto]]:min-h-[360px] min-[760px]:self-center min-[760px]:basis-0 min-[760px]:grow">
+      {% block 'image', fallback_image: default_image, aspect_ratio: 'aspect-auto', class: 'w-full h-auto [&[data-aspect-ratio=aspect-auto]]:absolute [&[data-aspect-ratio=aspect-auto]]:inset-0 [&[data-aspect-ratio=aspect-auto]]:h-full', sizes: '(min-width: 760px) 40vw, 100vw', attributes: 'loading="eager" fetchpriority="high"' %}{% endblock %}
+    </div>
+  </div>
+{% endblock %}
+
+
