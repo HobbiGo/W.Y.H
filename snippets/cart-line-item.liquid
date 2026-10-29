@@ -1,0 +1,136 @@
+
+{% doc %}
+  Renders a single cart line item with quantity controls and remove button.
+  Supports full (cart page) and compact (cart drawer) layouts. The caller owns
+  independently editable image, unit-price and remove-button blocks and passes
+  their rendered captures; this utility owns native row/quantity/discount markup.
+
+  @param {line_item} item - Shopify cart line item object. @required
+  @param {string} cart_id - The id of the parent `<s-cart>` element for commandfor targeting. @required
+  @param {boolean} [compact] - When true, renders the compact two-row stacked layout for drawers. Default: false.
+  @param {string} [media] - Caller-rendered image block, placed in the existing media frame when item.image exists.
+  @param {string} unit_price - Caller-rendered price block for item.original_price. @required
+  @param {string} remove_button - Caller-rendered remove button targeting cart_id and the item's line key. @required
+  @param {string} [class] - Additional CSS classes to append to the root element.
+  @param {string} [attributes] - Additional HTML attributes passed through to the root element.
+
+  @category commerce
+  @renders div
+
+  @example
+  {% render 'cart-line-item', item: item, cart_id: 'cart', compact: false, media: line_media, unit_price: line_unit_price, remove_button: line_remove_button %}
+  {% render 'cart-line-item', item: item, cart_id: 'cart-drawer-items', compact: true, media: line_media, unit_price: line_unit_price, remove_button: line_remove_button %}
+{% enddoc %}
+
+{%- liquid
+  assign compact = compact | default: false
+  assign safe_title = item.product.title | escape
+  assign qty_min = item.variant.quantity_rule.min | default: 1
+  assign qty_max = item.variant.quantity_rule.max
+  assign qty_step = item.variant.quantity_rule.increment | default: 1
+  assign cart_transition_scope = cart_id | handleize
+  assign line_transition_key = item.key | handleize
+  assign line_transition_name = 'cart-item-' | append: item.variant_id | append: '-' | append: cart_transition_scope | append: '-' | append: line_transition_key
+-%}
+
+{%- comment -%} Include variant id for readable selectors and line key/cart id so duplicate rows keep unique view-transition names. {%- endcomment -%}
+{%- if compact -%}
+  {%- comment -%} Compact layout: two-row stacked for cart drawer {%- endcomment -%}
+  {%- comment -%} commandfor/command attributes on buttons target the parent <s-cart> element via the command pattern —
+    do not replace with onclick handlers or the quantity controls will stop working. See assets/s-cart.js class JSDoc. {%- endcomment -%}
+  <div class="flex gap-3 py-4{% if class != blank %} {{ class }}{% endif %}"{% if attributes != blank %} {{ attributes }}{% endif %} style="view-transition-name: {{ line_transition_name }}">
+    {% if item.image %}
+      <a href="{{ item.url }}" class="shrink-0 size-16" aria-hidden="true" tabindex="-1">
+        {{ media }}
+      </a>
+    {% endif %}
+
+    <div class="flex-1 min-w-0">
+      <div class="flex items-baseline justify-between gap-2">
+        <div class="min-w-0">
+          <a href="{{ item.url }}" class="font-medium no-underline text-on-surface hover:opacity-70 motion-safe:transition-opacity line-clamp-1">
+            {{ item.product.title | escape }}
+          </a>
+          {% if item.variant.title != 'Default Title' %}
+            <p class="text-xs text-on-surface-secondary">{{ item.variant.title | escape }}</p>
+          {% endif %}
+          {{ unit_price }}
+        </div>
+        <p class="shrink-0 text-sm font-medium"><bdi>{{ item.line_price | money }}</bdi></p>
+      </div>
+
+      <div class="flex items-center gap-2 mt-1.5">
+        <div class="inline-flex items-center border border-border rounded-input">
+          <button type="button" commandfor="{{ cart_id }}" command="--update-quantity" data-delta="-{{ qty_step }}" data-variant-id="{{ item.variant_id }}" data-line-key="{{ item.key }}" data-qty-min="{{ qty_min }}"{% if qty_max != blank %} data-qty-max="{{ qty_max }}"{% endif %} data-qty-step="{{ qty_step }}" class="inline-flex items-center justify-center size-9 text-on-surface-secondary hover:text-on-surface cursor-pointer motion-safe:transition-[color,transform] motion-safe:active:scale-[0.90] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent" aria-label="{{ 'product.quantity_decrease' | t: title: safe_title }}">
+            <span class="inline-flex items-center justify-center shrink-0 size-3.5" aria-hidden="true">{{- 'icon-minus.svg' | inline_asset_content -}}</span>
+          </button>
+          <input type="number" inputmode="numeric" value="{{ item.quantity }}" min="{{ qty_min }}"{% if qty_max != blank %} max="{{ qty_max }}"{% endif %} step="{{ qty_step }}" data-quantity-display data-variant-id="{{ item.variant_id }}" data-line-key="{{ item.key }}" data-qty-min="{{ qty_min }}"{% if qty_max != blank %} data-qty-max="{{ qty_max }}"{% endif %} data-qty-step="{{ qty_step }}" aria-label="{{ 'product.quantity_input' | t: title: safe_title }}" class="w-10 h-9 text-center border-0 rounded-none px-1 py-0 bg-transparent text-on-surface text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
+          <button type="button" commandfor="{{ cart_id }}" command="--update-quantity" data-delta="{{ qty_step }}" data-variant-id="{{ item.variant_id }}" data-line-key="{{ item.key }}" data-qty-min="{{ qty_min }}"{% if qty_max != blank %} data-qty-max="{{ qty_max }}"{% endif %} data-qty-step="{{ qty_step }}" class="inline-flex items-center justify-center size-9 text-on-surface-secondary hover:text-on-surface cursor-pointer motion-safe:transition-[color,transform] motion-safe:active:scale-[0.90] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent" aria-label="{{ 'product.quantity_increase' | t: title: safe_title }}">
+            <span class="inline-flex items-center justify-center shrink-0 size-3.5" aria-hidden="true">{{- 'icon-plus.svg' | inline_asset_content -}}</span>
+          </button>
+        </div>
+        {{ remove_button }}
+      </div>
+      {% if item.line_level_discount_allocations.size > 0 %}
+        <ul class="mt-1" aria-label="{{ 'cart.discount_list' | t }}">
+          {% for discount in item.line_level_discount_allocations %}
+            <li class="flex items-center gap-1 text-xs text-sale">
+              <span class="inline-flex items-center justify-center shrink-0 size-4" aria-hidden="true">{{- 'icon-tag.svg' | inline_asset_content -}}</span>
+              {%- assign formatted_amount = discount.amount | money -%}
+              {{ discount.discount_application.title | escape }} <bdi>{{ 'cart.discount_savings' | t: amount: formatted_amount }}</bdi>
+            </li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    </div>
+  </div>
+{%- else -%}
+  {%- comment -%} Full layout: single-row for cart page.
+    commandfor/command attributes on buttons target the parent <s-cart> element via the command pattern —
+    do not replace with onclick handlers or the quantity controls will stop working. {%- endcomment -%}
+  <div class="flex items-start gap-4 sm:gap-6 py-6{% if class != blank %} {{ class }}{% endif %}"{% if attributes != blank %} {{ attributes }}{% endif %} style="view-transition-name: {{ line_transition_name }}">
+    {% if item.image %}
+      <div class="w-[68px] sm:w-[84px] shrink-0 overflow-hidden">
+        {{ media }}
+      </div>
+    {% endif %}
+
+    <div class="flex-1 min-w-0">
+      <div class="flex items-start justify-between gap-4">
+        <div class="min-w-0">
+          <a href="{{ item.url }}" class="text-base no-underline text-on-surface hover:opacity-70 motion-safe:transition-opacity">
+            {{ item.product.title | escape }}
+          </a>
+          {% if item.variant.title != 'Default Title' %}
+            <p class="text-sm text-on-surface-secondary mt-0.5">{{ item.variant.title | escape }}</p>
+          {% endif %}
+          {{ unit_price }}
+        </div>
+        <p class="text-base font-medium shrink-0"><bdi>{{ item.line_price | money }}</bdi></p>
+      </div>
+
+      <div class="flex items-center gap-5 mt-4">
+        <div class="inline-flex items-center border border-border rounded-input">
+          <button type="button" commandfor="{{ cart_id }}" command="--update-quantity" data-delta="-{{ qty_step }}" data-variant-id="{{ item.variant_id }}" data-line-key="{{ item.key }}" data-qty-min="{{ qty_min }}"{% if qty_max != blank %} data-qty-max="{{ qty_max }}"{% endif %} data-qty-step="{{ qty_step }}" class="inline-flex items-center justify-center size-9 text-on-surface-secondary hover:text-on-surface cursor-pointer motion-safe:transition-[color,transform] motion-safe:active:scale-[0.90] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent" aria-label="{{ 'product.quantity_decrease' | t: title: safe_title }}"><span class="inline-flex items-center justify-center shrink-0 size-3.5" aria-hidden="true">{{- 'icon-minus.svg' | inline_asset_content -}}</span></button>
+          <input type="number" inputmode="numeric" value="{{ item.quantity }}" min="{{ qty_min }}"{% if qty_max != blank %} max="{{ qty_max }}"{% endif %} step="{{ qty_step }}" data-quantity-display data-variant-id="{{ item.variant_id }}" data-line-key="{{ item.key }}" data-qty-min="{{ qty_min }}"{% if qty_max != blank %} data-qty-max="{{ qty_max }}"{% endif %} data-qty-step="{{ qty_step }}" aria-label="{{ 'product.quantity_input' | t: title: safe_title }}" class="w-10 h-9 text-center border-0 rounded-none p-0 bg-transparent text-on-surface text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
+          <button type="button" commandfor="{{ cart_id }}" command="--update-quantity" data-delta="{{ qty_step }}" data-variant-id="{{ item.variant_id }}" data-line-key="{{ item.key }}" data-qty-min="{{ qty_min }}"{% if qty_max != blank %} data-qty-max="{{ qty_max }}"{% endif %} data-qty-step="{{ qty_step }}" class="inline-flex items-center justify-center size-9 text-on-surface-secondary hover:text-on-surface cursor-pointer motion-safe:transition-[color,transform] motion-safe:active:scale-[0.90] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent" aria-label="{{ 'product.quantity_increase' | t: title: safe_title }}"><span class="inline-flex items-center justify-center shrink-0 size-3.5" aria-hidden="true">{{- 'icon-plus.svg' | inline_asset_content -}}</span></button>
+        </div>
+        {{ remove_button }}
+      </div>
+
+      {% if item.line_level_discount_allocations.size > 0 %}
+        <ul class="mt-2" aria-label="{{ 'cart.discount_list' | t }}">
+          {% for discount in item.line_level_discount_allocations %}
+            <li class="flex items-center gap-1 text-xs text-sale">
+              <span class="inline-flex items-center justify-center shrink-0 size-4" aria-hidden="true">{{- 'icon-tag.svg' | inline_asset_content -}}</span>
+              {%- assign formatted_amount = discount.amount | money -%}
+              {{ discount.discount_application.title | escape }} <bdi>{{ 'cart.discount_savings' | t: amount: formatted_amount }}</bdi>
+            </li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    </div>
+  </div>
+{%- endif -%}
+
+
