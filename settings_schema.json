@@ -1,0 +1,172 @@
+
+[
+  {
+    "name": "theme_info",
+    "theme_name": "Base",
+    "theme_version": "0.1.0",
+    "theme_author": "Shopify",
+    "theme_documentation_url": "https://help.shopify.com/manual/online-store/themes",
+    "theme_support_url": "https://support.shopify.com/"
+  },
+  {
+    "name": "t:settings.colors",
+    "settings": [
+      {
+        "type": "color_palette",
+        "id": "color_palette",
+        "default": {
+          "surface": "#FFFFFF",
+          "on_surface": "#171717",
+          "surface_2": "#F5F5F5",
+          "accent": "#2563EB",
+          "interactive": "#171717"
+        }
+      }
+    ]
+  },
+  {
+    "name": "t:settings.fonts",
+    "settings": [
+      {
+        "type": "font_picker",
+        "id": "type_primary_font",
+        "default": "manrope_n4",
+        "label": "t:typography.primary_font"
+      },
+      {
+        "type": "font_picker",
+        "id": "type_heading_font",
+        "default": "inter_n4",
+        "label": "t:typography.secondary_font"
+      }
+    ]
+  },
+  {
+    "name": "t:settings.type_styles",
+    "settings": [
+      {
+        "type": "select",
+        "id": "type_scale_paragraph_size",
+        "label": "t:type_styles.paragraph_size",
+        "default": "sm",
+        "options": [
+          {
+            "value": "xs",
+            "label": "t:general.extra_small"
+          },
+          {
+            "value": "sm",
+            "label": "t:general.small"
+          },
+          {
+            "value": "md",
+            "label": "t:general.medium"
+          },
+          {
+            "value": "lg",
+            "label": "t:general.large"
+          },
+          {
+            "value": "xl",
+            "label": "t:general.extra_large"
+          }
+        ]
+      },
+      {
+        "type": "select",
+        "id": "type_scale_heading_size",
+        "label": "t:type_styles.heading_size",
+        "default": "sm",
+        "options": [
+          {
+            "value": "xs",
+            "label": "t:general.extra_small"
+          },
+          {
+            "value": "sm",
+            "label": "t:general.small"
+          },
+          {
+            "value": "md",
+            "label": "t:general.medium"
+          },
+          {
+            "value": "lg",
+            "label": "t:general.large"
+          },
+          {
+            "value": "xl",
+            "label": "t:general.extra_large"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "t:settings.border_radius",
+    "settings": [
+      {
+        "type": "select",
+        "id": "border_radius_buttons",
+        "label": "t:general.buttons",
+        "default": "rounded",
+        "options": [
+          {
+            "value": "sharp",
+            "label": "t:general.sharp"
+          },
+          {
+            "value": "rounded",
+            "label": "t:general.rounded"
+          },
+          {
+            "value": "pill",
+            "label": "t:general.pill"
+          }
+        ]
+      },
+      {
+        "type": "select",
+        "id": "border_radius_cards",
+        "label": "t:general.cards",
+        "default": "sharp",
+        "options": [
+          {
+            "value": "sharp",
+            "label": "t:general.sharp"
+          },
+          {
+            "value": "rounded",
+            "label": "t:general.rounded"
+          },
+          {
+            "value": "pill",
+            "label": "t:general.pill"
+          }
+        ]
+      },
+      {
+        "type": "select",
+        "id": "border_radius_forms",
+        "label": "t:general.forms",
+        "default": "rounded",
+        "options": [
+          {
+            "value": "sharp",
+            "label": "t:general.sharp"
+          },
+          {
+            "value": "rounded",
+            "label": "t:general.rounded"
+          },
+          {
+            "value": "pill",
+            "label": "t:general.pill"
+          }
+        ]
+      }
+    ]
+  }
+]
+
+
