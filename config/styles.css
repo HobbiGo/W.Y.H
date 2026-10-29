@@ -1,0 +1,1185 @@
+
+@import "tailwindcss" source(none);
+@source "../assets/*.js";
+@source "../blocks/**/*.liquid";
+@source "../snippets/**/*.liquid";
+@source "../templates/**/*.liquid";
+@source "../layout/**/*.liquid";
+
+/* =============================================================================
+   DESIGN TOKENS
+   Custom properties registered with Tailwind v4's `@theme` directive.
+   These generate utility classes like bg-surface, text-on-surface,
+   border-border, text-sale, rounded-lg, etc.
+   ============================================================================= */
+
+@theme {
+  /* Surfaces */
+  --color-surface: #ffffff;
+  --color-surface-secondary: #f5f5f5;
+  --color-on-surface: #171717;
+  --color-on-surface-secondary: #61697a; /* AA contrast ≥4.5:1 on surface-secondary */
+  --color-border: #e5e7eb;
+
+  /* Brand & Accent */
+  --color-accent: #2563eb;
+
+  /* Interactive */
+  --color-interactive: #171717;
+  --color-interactive-text: #ffffff;
+
+  /* Button variants — defaults mirror the built-in variant styling below. */
+  --color-button-primary: var(--color-interactive);
+  --color-button-primary-text: var(--color-interactive-text);
+  --color-button-secondary: var(--color-border);
+  --color-button-secondary-text: var(--color-on-surface);
+  --color-button-outline-border: var(--color-interactive);
+  --color-button-outline-text: var(--color-interactive);
+
+  /* Commerce */
+  --color-sale: #dc2626;
+  --color-compare: #6b7280;
+
+  /* Semantic States */
+  --color-success: #059669;
+  --color-warning: #d97706;
+  --color-warning-text: #171717;
+  --color-critical: #dc2626;
+  --color-info: #2563eb;
+
+  /* Overlay */
+  --color-overlay: rgb(0 0 0 / 0.95);
+  --color-overlay-strong: rgb(0 0 0 / 0.7);
+  --color-overlay-subtle: rgb(0 0 0 / 0.5);
+
+  /* Radius */
+  --radius-sm: 0.25rem;
+  --radius: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-button: 0.5rem;
+  --radius-card: 0;
+  --radius-input: 0.5rem;
+
+  /* Typography */
+  --font-body: system-ui, -apple-system, sans-serif;
+  --font-heading: system-ui, -apple-system, sans-serif;
+  /* Easing */
+  --ease-ui: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+  /* Markup transition utilities inherit the theme's snappy UI curve without per-call-site ease-ui classes. */
+  --default-transition-timing-function: var(--ease-ui);
+
+  /* Layout spacing */
+  --spacing-page: 80rem;
+  --spacing-margin: max(1rem, var(--safe-area-inset-inline));
+  --spacing-touch-target: 2.75rem;
+  --spacing-dialog-max-height: 85dvh;
+  --spacing-hero: 60dvh;
+  --spacing-drawer-width: 480px;
+  --spacing-notification-width: min(
+    400px,
+    calc(100vw - max(1.5rem, var(--safe-area-inset-inline)) - max(1.5rem, var(--safe-area-inset-inline)))
+  );
+
+  /* Shadows */
+  --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-xl: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+
+  /* Aspect ratios */
+  --aspect-landscape: 16/9;
+}
+:root {
+  /* `viewport-fit=cover` lets backgrounds fill the physical viewport. These zero-fallback
+     variables keep content and controls inside the usable viewport on notched devices. */
+  --safe-area-inset-top: env(safe-area-inset-top, 0px);
+  --safe-area-inset-right: env(safe-area-inset-right, 0px);
+  --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-inset-left: env(safe-area-inset-left, 0px);
+  --safe-area-inset-inline: max(var(--safe-area-inset-left), var(--safe-area-inset-right));
+  --safe-area-inset-inline-start: var(--safe-area-inset-left);
+  --safe-area-inset-inline-end: var(--safe-area-inset-right);
+
+  --type-paragraph-lg-font: var(--font-body);
+  --type-paragraph-lg-size: 16.52px;
+  --type-paragraph-font: var(--font-body);
+  --type-paragraph-size: 14px;
+  --type-paragraph-sm-font: var(--font-body);
+  --type-paragraph-sm-size: 11.48px;
+  --type-heading-2xl-font: var(--font-heading);
+  --type-heading-2xl-size: 48.75px;
+  --type-heading-xl-font: var(--font-heading);
+  --type-heading-xl-size: 39px;
+  --type-heading-lg-font: var(--font-heading);
+  --type-heading-lg-size: 31.2px;
+  --type-heading-md-font: var(--font-heading);
+  --type-heading-md-size: 25.35px;
+  --type-heading-sm-font: var(--font-heading);
+  --type-heading-sm-size: 19.5px;
+  --type-subheading-font: var(--font-body);
+  --type-subheading-size: 10.92px;
+}
+
+[dir="rtl"] {
+  --safe-area-inset-inline-start: var(--safe-area-inset-right);
+  --safe-area-inset-inline-end: var(--safe-area-inset-left);
+}
+
+/* =============================================================================
+   UTILITIES (@utility)
+   Tailwind v4 custom utilities for patterns requiring nested selectors,
+   pseudo-elements, or @starting-style that cannot be expressed inline.
+   ============================================================================= */
+
+/* Shared missing-media treatment, not a generic utility: repeated image/card/hero
+   consumers share gradients while Liquid supplies positions and runtime tokens supply colors. */
+@layer components {
+  .placeholder-texture {
+    background-color: var(--color-surface-secondary);
+    background-image:
+      radial-gradient(
+        ellipse 90% 82% at var(--placeholder-accent-x) var(--placeholder-accent-y),
+        color-mix(in oklab, var(--color-accent) 44%, var(--color-surface)) 0%,
+        transparent 76%
+      ),
+      linear-gradient(
+        var(--placeholder-angle),
+        color-mix(in oklab, var(--color-accent) 10%, var(--color-surface)) 0%,
+        color-mix(in oklab, var(--color-on-surface) 22%, var(--color-surface)) 100%
+      );
+    background-position: center, center;
+    background-repeat: no-repeat;
+    background-size: 100% 100%, 140% 140%;
+  }
+}
+
+/* Fallback intrinsic ratio so a placeholder without a sized parent doesn't collapse to zero
+   height (the former SVG carried width/height). In @layer base so explicit aspect-ratio and
+   height utilities win; full-bleed positioned callers pair their insets with aspect-auto. */
+@layer base {
+  .placeholder-texture { aspect-ratio: 1; }
+}
+
+/* ---------------------------------------------------------------------------
+   COMPONENT VARIANT TOKENS
+   Defined in @layer components so that Tailwind utility classes passed via
+   the `class` parameter can reliably override variant styles.
+   Cascade priority: base < components < utilities.
+   --------------------------------------------------------------------------- */
+
+@layer components {
+  /* Collection-card overlay intensity variants — applied to an absolute inset-0 div over the card image.
+     Gradient runs from bottom (opaque) to top (transparent) so text at the bottom stays legible. */
+
+  /* Swatch size presets — map to the playground's Small/Medium/Large size steps. */
+  .swatch-sm { width: 1.5rem; height: 1.5rem; }   /* w-6 h-6 */
+  .swatch-md { width: 2rem;   height: 2rem;   }   /* w-8 h-8 */
+  .swatch-lg { width: 2.5rem; height: 2.5rem; }   /* w-10 h-10 */
+
+  .button-primary {
+    background: var(--color-button-primary);
+    color: var(--color-button-primary-text);
+    @media (hover: hover) { &:hover { background: color-mix(in oklab, var(--color-button-primary) 85%, black); } }
+  }
+
+  .button-secondary {
+    background: var(--color-button-secondary);
+    color: var(--color-button-secondary-text);
+    border: 1px solid var(--color-border);
+    @media (hover: hover) { &:hover { background: color-mix(in oklab, var(--color-button-secondary) 90%, black); border-color: color-mix(in oklab, var(--color-button-secondary) 90%, black); } }
+  }
+
+  .button-outline {
+    background: transparent;
+    color: var(--color-button-outline-text);
+    border: 2px solid var(--color-button-outline-border);
+    @media (hover: hover) { &:hover { background: var(--color-surface-secondary); } }
+  }
+
+  .button-ghost {
+    background: transparent;
+    color: var(--color-on-surface);
+    @media (hover: hover) { &:hover { background: var(--color-surface-secondary); } }
+  }
+
+  .button-surface {
+    background: var(--color-surface);
+    color: var(--color-on-surface);
+    @media (hover: hover) { &:hover { background: color-mix(in oklab, var(--color-surface) 90%, transparent); } }
+  }
+
+  .quantity-selector-outlined { border: 1px solid var(--color-border); background: transparent; }
+  .quantity-selector-filled   { background: var(--color-surface-secondary); border: 1px solid transparent; }
+
+  /* type-* is the single typography vocabulary. Heading variants balance line lengths;
+     body variants avoid lone trailing words, and utilities still win per call site. */
+  .type-display    { font-size: var(--type-heading-2xl-size); font-family: var(--type-heading-2xl-font); font-weight: 300; line-height: 1.25; text-wrap: balance; }
+  .type-heading-xl { font-size: var(--type-heading-xl-size); font-family: var(--type-heading-xl-font); font-weight: 300; text-wrap: balance; }
+  .type-heading-lg { font-size: var(--type-heading-lg-size); font-family: var(--type-heading-lg-font); font-weight: 300; text-wrap: balance; }
+  .type-heading-md { font-size: var(--type-heading-md-size); font-family: var(--type-heading-md-font); font-weight: 400; text-wrap: balance; }
+  .type-heading-sm { font-size: var(--type-heading-sm-size); font-family: var(--type-heading-sm-font); font-weight: 400; text-wrap: balance; }
+  .type-body-lg    { font-size: var(--type-paragraph-lg-size); font-family: var(--type-paragraph-lg-font); text-wrap: pretty; }
+  .type-body       { font-size: var(--type-paragraph-size); font-family: var(--type-paragraph-font); line-height: 1.625; text-wrap: pretty; }
+  .type-body-sm    { font-size: var(--type-paragraph-sm-size); font-family: var(--type-paragraph-sm-font); text-wrap: pretty; }
+  .type-overline   { font-size: var(--type-subheading-size); font-family: var(--type-subheading-font); font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; text-wrap: pretty; }
+}
+
+@layer base {
+  h1 { line-height: 1.2; }
+
+  /* `text-wrap` inherits, so one body default keeps orphans out of every paragraph, label,
+     and rich-text body without per-element utilities; the zero-specificity heading rule
+     balances merchant-authored rich-text headings. Variants and utilities override both. */
+  body { text-wrap: pretty; }
+  :where(h1, h2, h3, h4, h5, h6) { text-wrap: balance; }
+
+  /* Restore browser-default styles for rich-text-editor output. Tailwind Preflight
+     strips structural defaults (heading sizes, list bullets, paragraph margins, link
+     underline) that admin rich text relies on. The :not([class]) guard scopes these
+     to truly unclassed elements — content authored by merchants who never add classes —
+     so theme code using utilities or .type-* / .richtext stays in control. */
+  :where(h1, h2, h3, h4, h5, h6):not([class]) {
+    font-family: var(--font-heading);
+    font-weight: 300;
+    line-height: 1.25;
+  }
+  h1:not([class]) { font-size: var(--type-heading-xl-size); }
+  h2:not([class]) { font-size: var(--type-heading-lg-size); }
+  h3:not([class]) { font-size: var(--type-heading-md-size); }
+  h4:not([class]) { font-size: var(--type-heading-sm-size); }
+  h5:not([class]) { font-size: var(--type-paragraph-lg-size); }
+  h6:not([class]) { font-size: var(--type-paragraph-size); }
+
+  ul:not([class]) { list-style: disc; padding-inline-start: 1.5rem; }
+  ol:not([class]) { list-style: decimal; padding-inline-start: 1.5rem; }
+  :where(ul, ol):not([class]) { margin-block: 1rem; }
+  li:not([class]) { margin-block: 0.25rem; }
+
+  p:not([class]) { margin-block: 1rem; }
+
+  :where(strong, b):not([class]) {
+    font-weight: 700;
+  }
+
+  :where(em, i):not([class]) {
+    font-style: italic;
+  }
+
+  a:not([class]) {
+    color: var(--color-accent);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   BROWSER RESET UTILITIES
+   Named utilities for browser-specific resets that would otherwise require
+   Tailwind arbitrary-value escape hatches inline.
+   --------------------------------------------------------------------------- */
+
+/* ---------------------------------------------------------------------------
+   PRODUCT GRID LAYOUT
+   Product detail layout: single column on mobile, 2fr/1fr (roughly 67/33 split)
+   at md breakpoint (768px) with image gallery on the inline-start and product
+   info on the inline-end.
+   --------------------------------------------------------------------------- */
+
+@utility product-grid {
+  @media (min-width: 768px) {
+    grid-template-columns: 2fr 1fr;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   RICHTEXT / PROSE
+   Shared components-layer treatment for repeated Liquid-rendered merchant HTML
+   (product descriptions, blog posts, pages), not a generic utility or block-local CSS.
+   --------------------------------------------------------------------------- */
+
+@layer components {
+  .richtext {
+    display: block;
+    @apply text-on-surface leading-relaxed;
+
+    h1, h2, h3, h4, h5, h6 {
+      @apply font-bold text-on-surface leading-tight;
+    }
+
+    h1 { @apply text-4xl mt-8 mb-4; }
+    h2 { @apply text-3xl mt-8 mb-3; }
+    h3 { @apply text-2xl mt-6 mb-3; }
+    h4 { @apply text-xl mt-6 mb-2; }
+    h5 { @apply text-lg mt-4 mb-2; }
+    h6 { @apply text-base mt-4 mb-2; }
+
+    p {
+      @apply mb-4;
+    }
+
+    strong, b {
+      font-weight: 700;
+    }
+
+    :where(h1, h2, h3, h4, h5, h6) :where(strong, b) {
+      font-weight: 800;
+    }
+
+    em, i {
+      font-style: italic;
+    }
+
+    ul {
+      @apply list-disc ps-6 mb-4 space-y-1;
+    }
+
+    ol {
+      @apply list-decimal ps-6 mb-4 space-y-1;
+    }
+
+    li {
+      @apply text-on-surface;
+    }
+
+    a {
+      @apply text-accent underline underline-offset-2;
+
+      @media (hover: hover) {
+        &:hover {
+          @apply opacity-80;
+        }
+      }
+    }
+
+    blockquote {
+      @apply border-s-4 border-border ps-4 my-6 italic text-on-surface-secondary;
+    }
+
+    img {
+      @apply max-w-full h-auto rounded my-4;
+    }
+
+    table {
+      @apply w-full border-collapse mb-4;
+
+      th {
+        @apply text-start font-semibold border-b border-border px-3 py-2 bg-surface-secondary;
+      }
+
+      td {
+        @apply border-b border-border px-3 py-2;
+      }
+
+      tr:last-child td {
+        @apply border-b-0;
+      }
+    }
+
+    hr {
+      @apply border-0 border-t border-border my-8;
+    }
+
+    > *:first-child {
+      @apply mt-0;
+    }
+
+    > *:last-child {
+      @apply mb-0;
+    }
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   NOTIFICATION TOAST
+   Toast items created by <s-notification> JS component. Each variant gets
+   a distinct background from the semantic colour tokens. Uses @starting-style
+   for interruptible enter transition and opacity/transform for dismiss.
+   --------------------------------------------------------------------------- */
+
+/* ---------------------------------------------------------------------------
+   OVERLAY PANELS (drawers + modal dialogs)
+   `overlay-panel` (components layer) owns the chrome every native-dialog
+   surface shares: element reset, surface background, shadow, fade/slide
+   transition, backdrop fade, @starting-style entry, and reduced-motion
+   zeroing. Position treatments use utilities (defined below or composed at
+   their owner) so placement, radius, max-height, and zoom override the base.
+   Motion is parameterized: variants set --panel-closed-transform (closed and
+   @starting-style pose) and --panel-backdrop (open backdrop color).
+   Call sites pair overlay-panel with their position treatment.
+   --------------------------------------------------------------------------- */
+
+@layer base {
+  /* showModal() makes the page inert but still lets wheel/touch scroll reach the document
+     behind the backdrop. Lock the root while any modal dialog is open; overflow keeps the
+     scroll offset, so closing lands on the exact prior position. Deliberately no
+     scrollbar-gutter here: a modal-only gutter shifts fixed UI on pages that had no scrollbar. */
+  html:has(dialog:modal) {
+    overflow: hidden;
+  }
+}
+
+@layer components {
+  .overlay-panel {
+    border: none;
+    padding: 0;
+    margin: 0;
+    max-width: none;
+    max-height: none;
+    overflow: hidden;
+    /* Scroll inside a panel body must never chain into the locked document. */
+    overscroll-behavior: contain;
+    background: var(--color-surface);
+    box-shadow: var(--shadow-xl);
+    opacity: 0;
+    transform: var(--panel-closed-transform, none);
+    transition: opacity 0.2s var(--ease-drawer), transform 0.2s var(--ease-drawer), display 0.2s allow-discrete, overlay 0.2s allow-discrete;
+
+    &[open] {
+      opacity: 1;
+      /* `none` (not an identity transform) so the open panel is not a containing
+         block for fixed descendants — keeps the toast portal and skip targets
+         viewport-anchored. Do not change to translate(0). */
+      transform: none;
+      transition: opacity 0.3s var(--ease-drawer), transform 0.3s var(--ease-drawer), display 0.3s allow-discrete, overlay 0.3s allow-discrete;
+    }
+
+    &::backdrop {
+      background: rgb(0 0 0 / 0);
+      transition: background 0.2s var(--ease-drawer), display 0.2s allow-discrete, overlay 0.2s allow-discrete;
+    }
+
+    &[open]::backdrop {
+      background: var(--panel-backdrop, rgb(0 0 0 / 0.5));
+      transition: background 0.3s var(--ease-drawer), display 0.3s allow-discrete, overlay 0.3s allow-discrete;
+    }
+
+    @starting-style {
+      &[open] {
+        opacity: 0;
+        transform: var(--panel-closed-transform, none);
+      }
+      &[open]::backdrop {
+        background: rgb(0 0 0 / 0);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      transition-duration: 0s;
+      &[open] { transition-duration: 0s; }
+      &::backdrop { transition-duration: 0s; }
+      &[open]::backdrop { transition-duration: 0s; }
+    }
+  }
+}
+
+/* Dialog size variants reserve the larger side inset on both edges so centered controls stay notch-clear. */
+@layer utilities {
+  @media (max-width: 47.999rem) {
+    #predictive-search {
+      width: 100vw;
+      height: 100dvh;
+      max-height: 100dvh;
+      margin: 0;
+      border-radius: 0;
+      inset: 0;
+      /* The dialog background fills unsafe areas; padding protects its header and scrolling results. */
+      padding: var(--safe-area-inset-top) var(--safe-area-inset-right) var(--safe-area-inset-bottom)
+        var(--safe-area-inset-left);
+    }
+    #predictive-search [data-dialog-body] {
+      height: 100%;
+      max-height: none;
+    }
+    #predictive-search [data-fade-overlay] {
+      position: fixed;
+      bottom: 0;
+      inset-inline: 0;
+      z-index: 10;
+      /* This fixed child bypasses dialog padding, so protect the CTA directly. */
+      padding-block-end: calc(1rem + var(--safe-area-inset-bottom));
+      padding-inline-start: calc(1rem + var(--safe-area-inset-inline-start));
+      padding-inline-end: calc(1rem + var(--safe-area-inset-inline-end));
+    }
+  }
+
+  #predictive-search [data-fade-overlay] {
+    z-index: 10;
+  }
+
+  @media (min-width: 48rem) {
+    #predictive-search {
+      margin: auto;
+    }
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   COMBOBOX ACTIVE OPTION (Predictive Search)
+   Visual indicator for the active option during arrow-key navigation
+   in the predictive-search combobox (WCAG 2.4.7 Focus Visible).
+   --------------------------------------------------------------------------- */
+
+@layer base {
+  [role="option"] {
+    @media (prefers-reduced-motion: no-preference) {
+      transition: background-color 0.15s var(--ease-ui), color 0.15s var(--ease-ui);
+    }
+  }
+
+  [role="option"][aria-selected="true"] {
+    background-color: var(--color-surface-secondary);
+    outline: 2px solid var(--color-accent);
+    outline-offset: -2px;
+    border-radius: var(--radius-sm);
+  }
+}
+
+/* =============================================================================
+   ELEMENT STYLES
+   Base styles targeting HTML elements and custom elements directly.
+   These are not class-based — they style elements by tag/attribute.
+   ============================================================================= */
+
+/* ---------------------------------------------------------------------------
+   POPOVER (native Popover API)
+   Uses [popover] attribute, :popover-open pseudo-class, and @starting-style
+   for entry/exit animations. Triggered via popovertarget on buttons.
+   In @layer base so Tailwind utilities can override these defaults.
+   --------------------------------------------------------------------------- */
+
+@layer base {
+  [popover] {
+    border: none;
+    padding: 0;
+    margin: 0;
+    overflow: visible;
+    background: transparent;
+    opacity: 0;
+    transform: translateY(4px);
+    transform-origin: var(--popover-origin, center);
+    transition: opacity 0.1s var(--ease-ui), transform 0.1s var(--ease-ui), display 0.1s allow-discrete, overlay 0.1s allow-discrete;
+  }
+
+  [popover]:popover-open {
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 0.15s var(--ease-ui), transform 0.15s var(--ease-ui), display 0.15s allow-discrete, overlay 0.15s allow-discrete;
+  }
+
+  @starting-style {
+    [popover]:popover-open {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    [popover] { transition-duration: 0s; }
+    [popover]:popover-open { transition-duration: 0s; }
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   FORM FIELD BASE STYLES
+   Shared base for text inputs, textareas, and selects. Provides consistent
+   border, radius, focus ring, and error state via aria-invalid.
+   --------------------------------------------------------------------------- */
+
+@layer base {
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="search"],
+  input[type="tel"],
+  input[type="url"],
+  input[type="number"],
+  input[type="date"],
+  textarea,
+  select {
+    @apply w-full text-on-surface bg-surface rounded-input;
+    padding: 0.375rem 0.75rem;
+    border: 1px solid var(--color-border);
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    line-height: 1.5;
+    appearance: none;
+
+    @media (prefers-reduced-motion: no-preference) {
+      transition: border-color 0.15s var(--ease-ui), box-shadow 0.15s var(--ease-ui);
+    }
+
+    /* Placeholder colour */
+    &::placeholder {
+      @apply text-on-surface-secondary;
+    }
+
+    /* Focus ring using interactive colour — solid outline for 3:1 contrast */
+    &:focus-visible {
+      outline: 2px solid var(--color-interactive);
+      outline-offset: 2px;
+    }
+
+    /* Disabled state */
+    &:disabled {
+      @apply opacity-50 cursor-not-allowed bg-surface-secondary;
+    }
+
+    /* Error state driven by aria-invalid (set by Shopify form validation) */
+    &[aria-invalid="true"] {
+      border-color: var(--color-critical);
+      box-shadow: 0 0 0 3px color-mix(in oklab, var(--color-critical) 15%, transparent);
+    }
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   BUTTON SIZE BASE STYLES
+   Default padding and font-size for button variants. `:where()` keeps
+   specificity at 0 so Tailwind utilities passed via `class` (e.g. explicit
+   `px-4 h-11 text-sm`) still win.
+   --------------------------------------------------------------------------- */
+
+@layer base {
+  :where(.button-primary, .button-secondary, .button-outline, .button-ghost, .button-surface) {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.875rem;
+  }
+}
+
+/* Select-specific: restore chevron via background image */
+@layer base {
+  select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 1rem;
+    padding-inline-end: 2.5rem;
+  }
+
+  /* background-position has no logical equivalent; pin chevron to the inline-start
+     edge in RTL so it stays aligned with the padding gap created by padding-inline-end */
+  [dir="rtl"] select {
+    background-position: left 0.75rem center;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   CART REMOVE BUTTON — trash icon animation
+   Top lid tilts up-left; bottom body drops slightly on hover.
+   --------------------------------------------------------------------------- */
+
+@layer components {
+  .remove-icon-top,
+  .remove-icon-bottom {
+    transition: transform 125ms var(--ease-ui);
+  }
+
+  @media (hover: hover) {
+    [command="--remove"]:hover .remove-icon-top {
+      transform: translate(-0.5px, -2px) rotate(-15deg);
+      transform-origin: 60% 50%;
+    }
+    [command="--remove"]:hover .remove-icon-bottom {
+      transform: translateY(0.75px);
+    }
+  }
+
+}
+
+/* Textarea: no horizontal resize to respect container width */
+@layer base {
+  textarea {
+    resize: vertical;
+    min-height: 6rem;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   VIDEO (s-video custom element)
+   Click-to-load video player with poster image and play button.
+   --------------------------------------------------------------------------- */
+
+@layer base {
+  s-video,
+  s-predictive-search,
+  s-cart,
+  s-live-form,
+  s-localization-dropdown,
+  s-mobile-nav,
+  s-variant-picker,
+  s-product-image-zoom {
+    display: block;
+  }
+}
+
+@layer base {
+  s-video {
+    position: relative;
+  }
+
+  s-video iframe,
+  s-video video {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+}
+
+@layer base {
+  @media (min-width: 48rem) {
+    :root { --spacing-margin: max(2.5rem, var(--safe-area-inset-inline)); }
+  }
+}
+
+@layer utilities {
+  [data-header-nav-group] {
+    padding-inline: var(--spacing-margin);
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   GRID STAGGER REVEAL
+   Shared components-layer choreography for listing grids, not a generic utility.
+   One-shot batch reveal for collection, search, blog, and homepage items.
+   The first responsive row stays visible immediately so above-the-fold LCP
+   candidates are not delayed by the reveal animation. Protected by the REDUCED
+   MOTION block at the end of this file which zeroes animation duration and
+   delay for all elements. No motion-safe: prefix needed.
+   --------------------------------------------------------------------------- */
+
+@layer components {
+  .stagger-fade-in {
+    & > * { animation: none; }
+    & > *:nth-child(n+2):nth-child(-n+9) { animation: stagger-item 0.4s var(--ease-ui) both; }
+    & > *:nth-child(2) { animation-delay: 0ms; }
+    & > *:nth-child(3) { animation-delay: 50ms; }
+    & > *:nth-child(4) { animation-delay: 100ms; }
+    & > *:nth-child(5) { animation-delay: 150ms; }
+    & > *:nth-child(6) { animation-delay: 200ms; }
+    & > *:nth-child(7) { animation-delay: 250ms; }
+    & > *:nth-child(8) { animation-delay: 300ms; }
+    & > *:nth-child(9) { animation-delay: 350ms; }
+
+    @media (min-width: 48rem) {
+      & > *:nth-child(n+1):nth-child(-n+2) { animation: none; }
+      & > *:nth-child(n+3):nth-child(-n+10) { animation: stagger-item 0.4s var(--ease-ui) both; }
+      & > *:nth-child(3) { animation-delay: 0ms; }
+      & > *:nth-child(4) { animation-delay: 50ms; }
+      & > *:nth-child(5) { animation-delay: 100ms; }
+      & > *:nth-child(6) { animation-delay: 150ms; }
+      & > *:nth-child(7) { animation-delay: 200ms; }
+      & > *:nth-child(8) { animation-delay: 250ms; }
+      & > *:nth-child(9) { animation-delay: 300ms; }
+      & > *:nth-child(10) { animation-delay: 350ms; }
+    }
+
+    @media (min-width: 64rem) {
+      &.lg\:grid-cols-3 > *:nth-child(n+1):nth-child(-n+3) { animation: none; }
+      &.lg\:grid-cols-3 > *:nth-child(n+4):nth-child(-n+11) { animation: stagger-item 0.4s var(--ease-ui) both; }
+      &.lg\:grid-cols-3 > *:nth-child(4) { animation-delay: 0ms; }
+      &.lg\:grid-cols-3 > *:nth-child(5) { animation-delay: 50ms; }
+      &.lg\:grid-cols-3 > *:nth-child(6) { animation-delay: 100ms; }
+      &.lg\:grid-cols-3 > *:nth-child(7) { animation-delay: 150ms; }
+      &.lg\:grid-cols-3 > *:nth-child(8) { animation-delay: 200ms; }
+      &.lg\:grid-cols-3 > *:nth-child(9) { animation-delay: 250ms; }
+      &.lg\:grid-cols-3 > *:nth-child(10) { animation-delay: 300ms; }
+      &.lg\:grid-cols-3 > *:nth-child(11) { animation-delay: 350ms; }
+
+      &.lg\:grid-cols-4 > *:nth-child(n+1):nth-child(-n+4) { animation: none; }
+      &.lg\:grid-cols-4 > *:nth-child(n+5):nth-child(-n+12) { animation: stagger-item 0.4s var(--ease-ui) both; }
+      &.lg\:grid-cols-4 > *:nth-child(5) { animation-delay: 0ms; }
+      &.lg\:grid-cols-4 > *:nth-child(6) { animation-delay: 50ms; }
+      &.lg\:grid-cols-4 > *:nth-child(7) { animation-delay: 100ms; }
+      &.lg\:grid-cols-4 > *:nth-child(8) { animation-delay: 150ms; }
+      &.lg\:grid-cols-4 > *:nth-child(9) { animation-delay: 200ms; }
+      &.lg\:grid-cols-4 > *:nth-child(10) { animation-delay: 250ms; }
+      &.lg\:grid-cols-4 > *:nth-child(11) { animation-delay: 300ms; }
+      &.lg\:grid-cols-4 > *:nth-child(12) { animation-delay: 350ms; }
+    }
+
+    /* Reveal runs once per page load: after the first successful partial apply,
+       s-live-form.js sets data-stagger-settled on the wrapper so refreshed grids
+       render immediately. !important is required because the per-child nth-child
+       rules above carry higher specificity than any ancestor-scoped override. */
+    [data-stagger-settled] & > * {
+      animation: none !important;
+    }
+  }
+}
+
+@keyframes stagger-item {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* =============================================================================
+   REDUCED MOTION
+   Disables all animations and transitions for users who prefer reduced motion.
+   ============================================================================= */
+
+@layer base {
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-delay: 0s !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+/* =============================================================================
+   DESKTOP NAV DROPDOWN — Version 2
+   Multi-column inline dropdown: sub-items appear as additional grid columns
+   with a vertical divider, triggered on hover.
+   ============================================================================= */
+
+@layer components {
+
+.nav-has-dropdown {
+  position: relative;
+}
+
+.nav-dropdown {
+  position: absolute;
+  top: 100%;
+  inset-inline-start: -13px;
+  padding-block-start: 10px;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-4px);
+  transition: opacity 0.15s var(--ease-ui), transform 0.15s var(--ease-ui), visibility 0.15s;
+  z-index: 50;
+  pointer-events: none;
+}
+
+@media (hover: hover) {
+  .nav-has-dropdown:hover .nav-dropdown {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+
+  /* Suppresses the hover reveal when Escape is pressed while a panel is hovered.
+     Restored on mouseleave (s-nav-dropdown.js clears data-suppress-hover). */
+  .nav-has-dropdown[data-suppress-hover]:hover .nav-dropdown {
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-4px);
+    pointer-events: none;
+  }
+}
+
+/* Shows the submenu when the toggle button is pressed: s-nav-dropdown.js sets
+   data-open on press. Only hover (above) and this attribute open the submenu; there
+   is deliberately no :focus-within rule, so tabbing onto the item does not open it. */
+.nav-has-dropdown[data-open] .nav-dropdown {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+/* Top-level chevron toggle button. Only visible when focused by keyboard on
+   pointer devices, so mouse users keep a clean top bar and open submenus by hovering;
+   positioned absolutely just after the link so showing/hiding it never shifts the
+   top-bar layout. On touch devices, the button is always visible and interactive
+   so tap can open the panel. */
+.nav-disclosure {
+  position: absolute;
+  inset-inline-start: 100%;
+  inset-block-start: 50%;
+  transform: translateY(-50%);
+  margin-inline-start: 2px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border: 0;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s var(--ease-ui), transform 0.15s var(--ease-ui);
+}
+
+.nav-disclosure:active {
+  transform: translateY(-50%) scale(0.90);
+}
+
+.nav-disclosure:focus-visible {
+  opacity: 1;
+  pointer-events: auto;
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* On touch devices, make disclosure buttons visible and interactive so users
+   can tap to open submenus (hover reveal is unavailable). */
+@media (hover: none) {
+  .nav-disclosure {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
+.nav-disclosure-icon {
+  display: block;
+  width: 0.75rem;
+  height: 0.75rem;
+  transition: transform 0.15s var(--ease-ui);
+}
+
+.nav-disclosure[aria-expanded='true'] .nav-disclosure-icon {
+  transform: rotate(180deg);
+}
+
+.nav-dropdown-inner {
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  padding: 16px;
+  display: grid;
+  grid-template-columns: minmax(120px, max-content);
+  grid-auto-flow: column;
+  gap: 0 16px;
+  min-width: 120px;
+  max-width: calc(100vw - 2rem);
+}
+
+.nav-dropdown-inner:has(.nav-dropdown-group) {
+  padding-inline-end: 14px;
+}
+
+/* Dim the NON-hovered items when anything in the panel is hovered.
+   Targeting :not(:hover) siblings reproduces the original "dim all but the
+   hovered one" effect without the restore rule's !important — which, from
+   @layer components, would override (defeat) any opacity-* utility on these
+   elements due to cascade-layer !important precedence. */
+@media (hover: hover) {
+  .nav-dropdown-inner:hover > li > .nav-dropdown-item:not(:hover),
+  .nav-dropdown-inner:hover > .nav-dropdown-group:not(:hover) > .nav-dropdown-row {
+    opacity: 0.6;
+  }
+}
+
+.nav-dropdown-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.35;
+  color: var(--color-on-surface);
+  text-decoration: none;
+  padding: 3px 0;
+  grid-column: 1;
+  min-width: 120px;
+  max-width: 16rem;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  transition: opacity 0.15s var(--ease-ui);
+}
+
+/* Row holding a parent item's link + its chevron toggle button, so the visible title
+   is a real link and the chevron is a separate button you can tab to. Occupies the
+   left grid column; the submenu stays in column 2. */
+.nav-dropdown-row {
+  grid-column: 1;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.nav-dropdown-row > .nav-dropdown-item {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+/* Nested submenu disclosure button. Padding is sized for a ≥24×24px hit area
+   (WCAG 2.5.5 Target Size, Level AAA; 2.5.8 minimum in WCAG 2.2). Icon stays small. */
+.nav-dropdown-disclosure {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 9px;
+  border: 0;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: transform 0.15s var(--ease-ui);
+}
+
+.nav-dropdown-disclosure:active {
+  transform: scale(0.90);
+}
+
+.nav-dropdown-disclosure:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.nav-dropdown-disclosure svg {
+  width: 6px;
+  height: 9px;
+}
+
+/* On touch devices, make nested disclosure buttons visible and interactive. */
+@media (hover: none) {
+  .nav-dropdown-disclosure {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
+@media (hover: hover) {
+  /* Bridge the grid gap so pointer travel into the next column keeps the group hovered. */
+  .nav-dropdown-group > .nav-dropdown-row::after {
+    content: "";
+    position: absolute;
+    inset-block: 0;
+    inset-inline-end: -24px;
+    width: 24px;
+  }
+}
+
+/* Group wraps a first-level item + its submenu column */
+.nav-dropdown-group {
+  display: contents;
+}
+
+/* Second column: hidden by default, shown on group hover */
+.nav-dropdown-submenu {
+  grid-column: 2;
+  grid-row: 1 / span 10;
+  display: none;
+  padding: 16px;
+  margin-block: -16px;
+  border-inline-start: 1px solid var(--color-border);
+  align-self: stretch;
+  flex-direction: row;
+  gap: 24px;
+}
+
+@media (hover: hover) {
+  /* Only reveal the active group; sibling submenus share the same grid cell. */
+  .nav-dropdown-group:hover > .nav-dropdown-submenu {
+    display: flex;
+    animation: navDropdownFadeIn 0.15s var(--ease-ui);
+  }
+
+  /* Suppresses the nested hover reveal when Escape is pressed. */
+  .nav-dropdown-group[data-suppress-hover]:hover > .nav-dropdown-submenu {
+    display: none;
+  }
+}
+
+/* Shows the nested column when its toggle button is pressed (s-nav-dropdown.js sets
+   data-open on the group). No :focus-within rule — tabbing onto the item must not
+   open the column on its own. */
+.nav-dropdown-group[data-open] > .nav-dropdown-submenu {
+  display: flex;
+  animation: navDropdownFadeIn 0.15s var(--ease-ui);
+}
+
+} /* end @layer components (nav dropdown part 1) */
+
+@keyframes navDropdownFadeIn {
+  from { opacity: 0; transform: translateX(-2px) scale(0.99); }
+  to   { opacity: 1; transform: translateX(0) scale(1); }
+}
+
+@layer components {
+
+/* Submenu inner: second column contents */
+.nav-submenu-inner {
+  display: grid;
+  grid-template-columns: minmax(100px, max-content);
+  grid-auto-flow: column;
+  gap: 0 24px;
+  min-width: 100px;
+  align-content: start;
+}
+
+.nav-submenu-inner > li > .nav-dropdown-item {
+  padding: 3px 0;
+  grid-column: 1;
+  min-width: 100px;
+}
+
+.nav-submenu-inner > .nav-dropdown-group > .nav-dropdown-row {
+  grid-column: 1;
+  min-width: 100px;
+}
+
+/* Dim non-hovered submenu items on hover (see nav-dropdown-inner note above). */
+@media (hover: hover) {
+  .nav-submenu-inner:hover > li > .nav-dropdown-item:not(:hover),
+  .nav-submenu-inner:hover > .nav-dropdown-group:not(:hover) > .nav-dropdown-row {
+    opacity: 0.6;
+  }
+}
+
+/* Third column */
+.nav-submenu-inner > .nav-dropdown-group {
+  display: contents;
+}
+
+.nav-submenu-inner > .nav-dropdown-group > .nav-dropdown-submenu {
+  grid-column: 2;
+  grid-row: 1 / span 10;
+  display: none;
+  padding-inline: 16px;
+  border-inline-start: 1px solid var(--color-border);
+  align-self: flex-start;
+}
+
+@media (hover: hover) {
+  /* Only reveal the active group; sibling submenus share the same grid cell. */
+  .nav-submenu-inner > .nav-dropdown-group:hover > .nav-dropdown-submenu {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    animation: navDropdownFadeIn 0.15s var(--ease-ui);
+  }
+
+  /* Suppresses the nested third-column hover reveal when Escape is pressed. */
+  .nav-submenu-inner > .nav-dropdown-group[data-suppress-hover]:hover > .nav-dropdown-submenu {
+    display: none;
+  }
+}
+
+.nav-submenu-inner > .nav-dropdown-group[data-open] > .nav-dropdown-submenu {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  animation: navDropdownFadeIn 0.15s var(--ease-ui);
+}
+
+.nav-submenu-inner > .nav-dropdown-group > .nav-dropdown-submenu .nav-submenu-inner {
+  min-width: 100px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+}
+
+.nav-submenu-inner > .nav-dropdown-group > .nav-dropdown-submenu .nav-dropdown-item {
+  padding: 3px 0;
+}
+
+} /* end @layer components (nav dropdown part 2) */
+
+
