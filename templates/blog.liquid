@@ -1,0 +1,60 @@
+
+{% block 'container', class: 'w-full max-w-page mx-auto px-margin' %}
+  <div class="py-12">
+    {% block 'text', tag: 'h1', variant: 'type-heading-xl', class: 'mb-8' %}{{ blog.title | escape }}{% endblock %}
+
+    <h2 class="sr-only">{{ 'blog.articles_heading' | t }}</h2>
+
+    {% paginate blog.articles by 12 %}
+      {%- if blog.articles.size > 0 -%}
+        <ul role="list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 stagger-fade-in">
+          {%- for article in blog.articles -%}
+            {%- comment -%} The six-slot eager threshold matches two large-screen three-column rows; the slot-one image receives the LCP priority hint when present. {%- endcomment -%}
+            {%- if forloop.index <= 6 -%}
+              {%- assign img_loading_lazy = false -%}
+            {%- else -%}
+              {%- assign img_loading_lazy = true -%}
+            {%- endif -%}
+            {%- if forloop.first -%}{%- assign fetch_priority = 'high' -%}{%- else -%}{%- assign fetch_priority = 'auto' -%}{%- endif -%}
+            {%- if img_loading_lazy -%}{%- assign image_loading = 'loading="lazy"' -%}{%- else -%}{%- assign image_loading = 'loading="eager"' -%}{%- endif -%}
+            {%- assign image_attributes = image_loading | append: ' fetchpriority="' | append: fetch_priority | append: '"' -%}
+            {%- assign card_article = article -%}
+            {%- assign card_has_media = false -%}
+            {%- if card_article.image != blank -%}{%- assign card_has_media = true -%}{%- endif -%}
+            {%- comment -%} Imageless articles use link_mode: 'card' so the shell provides the accessible whole-card link. {%- endcomment -%}
+            {%- if card_has_media -%}{%- assign card_link_mode = 'content' -%}{%- else -%}{%- assign card_link_mode = 'card' -%}{%- endif -%}
+
+            <li>
+              {% block 'card', block.name: 't:blocks.article_card', url: card_article.url, aria_label: card_article.title, link_mode: card_link_mode %}
+                {% if card_has_media %}
+                  {%- comment -%} The image sizes match the blog preload imagesizes; child image settings remain independently editable. {%- endcomment -%}
+                  {%- comment -%} Inherit the shell radius so its editor setting controls the media link too. {%- endcomment -%}
+                  <a href="{{ card_article.url | escape }}" class="relative block overflow-hidden rounded-[inherit]" aria-label="{{ card_article.title | escape }}">
+                    {% block 'image', fallback_image: card_article.image, sizes: '(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw', aspect_ratio: 'aspect-square', image: card_article.image, alt: card_article.title, attributes: image_attributes, seed: forloop.index, placeholder_kind: 'article' %}{% endblock %}
+                  </a>
+                {% endif %}
+                <div class="flex flex-col gap-0.5">
+                  {% block 'text', variant: 'type-body-sm', tag: 'h3', class: 'font-medium text-on-surface line-clamp-2' %}{{ card_article.title | escape }}{% endblock %}
+                  {%- assign article_date = card_article.published_at | date: format: 'date' -%}
+                  {%- assign article_datetime = card_article.published_at | date: '%Y-%m-%d' -%}
+                  {%- assign escaped_author = card_article.author | escape -%}
+                  {%- comment -%} The `_html` metadata translations own the semantic `<time>`; the text block renders its content raw so that element survives the selectable wrapper. {%- endcomment -%}
+                  {% block 'text', variant: 'type-body-sm', class: 'text-on-surface-secondary' %}{% if card_article.author %}{{ 'blog.article_metadata_html' | t: date: article_date, datetime: article_datetime, author: escaped_author }}{% else %}{{ 'blog.article_metadata_no_author_html' | t: date: article_date, datetime: article_datetime }}{% endif %}{% endblock %}
+                  {%- if card_article.excerpt_or_content != blank -%}
+                    {% block 'text', variant: 'type-body-sm', class: 'text-on-surface-secondary line-clamp-3' %}{{ card_article.excerpt_or_content | strip_html | truncatewords: 25 }}{% endblock %}
+                  {%- endif -%}
+                </div>
+              {% endblock %}
+            </li>
+          {%- endfor -%}
+        </ul>
+      {%- else -%}
+        {% block 'text', variant: 'type-body', class: 'text-on-surface-secondary text-center py-12' %}{{ 'blog.no_articles' | t }}{% endblock %}
+      {%- endif -%}
+
+      {% block 'pagination', paginate: paginate, class: 'mt-12' %}{% endblock %}
+    {% endpaginate %}
+  </div>
+{% endblock %}
+
+
