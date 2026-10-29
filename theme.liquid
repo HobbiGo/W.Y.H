@@ -1,0 +1,467 @@
+
+<!doctype html>
+{%- comment -%} dir comes from the platform (request.locale.direction); never derive it from a theme-local RTL language list. {%- endcomment -%}
+<html lang="{{ request.locale.iso_code }}" dir="{{ request.locale.direction | default: 'ltr' }}">
+  <head>
+    {%- comment -%} The import map must precede the first module script, so it stays first in the head. {%- endcomment -%}
+    {% render 'import-map' %}
+    {% render 'meta-tags' %}
+    {{ 'styles.min.css' | asset_url | stylesheet_tag: preload: true }}
+    {% render 'theme-styles' %}
+
+    {% render 'lcp-preload' %}
+
+    {%- comment -%}
+      Standard Actions configuration must register before content_for_header so
+      platform cart mutations use the theme handler instead of the full-page fallback.
+    {%- endcomment -%}
+    {% render 'standard-actions-config' %}
+
+    {{ content_for_header }}
+  </head>
+
+  <body class="flex flex-col min-h-svh bg-surface text-on-surface font-body antialiased max-md:pb-[calc(4rem+env(safe-area-inset-bottom))]">
+    {% render 'skip-link' %}
+    {% block 'header', class: 'sticky top-0 z-30 border-b border-accent/20 bg-surface/95 backdrop-blur' %}
+      <div
+        class="grid grid-cols-[1fr_auto_1fr] items-center gap-x-2 min-h-16 px-margin py-3 max-w-page mx-auto w-full"
+        data-header-nav-group
+      >
+        <div class="flex shrink-0 items-center gap-2 justify-self-start">
+          <div class="hidden max-md:block ms-[min(0px,calc(var(--safe-area-inset-inline)-0.5rem))]">
+            {%- capture menu_button_attrs -%}aria-label="{{ 'header.menu' | t | escape }}"{%- endcapture -%}
+            {% block 'button',
+              commandfor: 'mobile-nav-drawer',
+              command: 'show-modal',
+              variant: 'button-ghost',
+              class: 'size-touch-target rounded hover:bg-transparent hover:opacity-70',
+              attributes: menu_button_attrs -%}
+              <span class="inline-flex items-center justify-center shrink-0 size-5" aria-hidden="true">
+                {{- 'icon-menu.svg' | inline_asset_content -}}
+              </span>
+            {%- endblock %}
+          </div>
+        </div>
+
+        {%- comment -%} Centered brand mark: an uploaded Brand logo wins; otherwise the editable W.Y.H wordmark renders. {%- endcomment -%}
+        <div class="justify-self-center">
+          {%- if shop.brand.logo -%}
+            {% block 'logo', class: 'justify-center' %}{% endblock %}
+          {%- else -%}
+            <a href="{{ routes.root_url }}" class="group flex flex-col items-center text-center no-underline text-accent rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent">
+              <span class="font-heading text-4xl font-bold leading-none tracking-[-0.14em] bg-linear-to-b from-[color-mix(in_oklch,var(--color-accent),white_45%)] via-accent to-[color-mix(in_oklch,var(--color-accent),black_35%)] bg-clip-text text-transparent md:text-5xl" aria-hidden="true">W<span class="relative -top-[0.12em] text-[0.8em]">Y</span>H</span>
+              {% block 'text', tag: 'span', variant: 'type-heading-sm', class: 'mt-1 font-semibold tracking-[0.3em] text-accent' %}
+                {{- 'brand.name' | t -}}
+              {% endblock %}
+              {% block 'text', tag: 'span', variant: 'type-overline', class: 'text-[0.55rem] tracking-[0.25em] text-on-surface/70' %}
+                {{- 'brand.tagline' | t -}}
+              {% endblock %}
+              {% block 'text', tag: 'span', variant: 'type-overline', class: 'text-[0.5rem] tracking-[0.2em] text-on-surface/60' %}
+                {{- 'brand.established' | t -}}
+              {% endblock %}
+            </a>
+          {%- endif -%}
+        </div>
+
+        {%- capture mobile_nav_close_button -%}
+          {%- capture nav_close_button_attrs -%}aria-label="{{ 'general.close' | t | escape }}"{%- endcapture -%}
+          {% block 'button', commandfor: 'mobile-nav-drawer', command: 'close', variant: 'button-ghost', class: 'ms-auto size-touch-target rounded hover:bg-transparent hover:opacity-70', attributes: nav_close_button_attrs %}<span class="inline-flex items-center justify-center shrink-0 size-5" aria-hidden="true">{{- 'icon-x.svg' | inline_asset_content -}}</span>{% endblock %}
+        {%- endcapture -%}
+        {%- capture mobile_nav_localization_submit -%}
+          {% block 'button', type: 'submit', variant: 'button-secondary', class: 'h-11 rounded-button px-3 text-xs' %}{{ 'localization.update_language' | t }}{% endblock %}
+        {%- endcapture -%}
+        {% block 'main-menu', class: 'hidden md:flex col-span-3 row-start-2 flex-wrap items-center justify-center gap-x-10 gap-y-2 mt-3 pt-3 border-t border-accent/15 uppercase tracking-[0.15em] text-xs', mobile_nav_close_button: mobile_nav_close_button, mobile_nav_localization_submit: mobile_nav_localization_submit %}{% endblock %}
+
+        <div class="flex shrink-0 items-center gap-0 justify-self-end row-start-1 col-start-3">
+          {%- capture header_localization_submit -%}
+            {% block 'button', type: 'submit', variant: 'button-secondary', class: 'h-11 rounded-button px-3 text-xs' %}{{ 'localization.update_language' | t }}{% endblock %}
+          {%- endcapture -%}
+          {% render 'localization-form', show_country: true, id: 'header-localization', class: 'hidden md:block me-2', submit_button: header_localization_submit %}
+
+          {%- capture search_button_attrs -%}aria-label="{{ 'general.search' | t | escape }}"{%- endcapture -%}
+          {% block 'button',
+            commandfor: 'predictive-search',
+            command: 'show-modal',
+            variant: 'button-ghost',
+            class: 'size-touch-target rounded hover:bg-transparent hover:opacity-70',
+            attributes: search_button_attrs -%}
+            <span class="inline-flex items-center justify-center shrink-0 size-5" aria-hidden="true">
+              {{- 'icon-search.svg' | inline_asset_content -}}
+            </span>
+          {%- endblock %}
+
+          {% if shop.customer_accounts_enabled %}
+            {%- comment -%} This menu handle matches Shopify customer accounts' default Orders/Profile menu. {%- endcomment -%}
+            <shopify-account
+              menu="customer-account-main-menu"
+              title="{{ 'general.account' | t | escape }}"
+              class="inline-flex h-11 min-w-11 items-center justify-center rounded text-on-surface hover:opacity-70 motion-safe:transition motion-safe:active:scale-[0.97] [--shopify-account-avatar-size:2.75rem] [--shopify-account-signed-in-avatar-size:1.75rem] [--shopify-account-signed-in-avatar-color-background:var(--color-interactive)] [--shopify-account-signed-in-avatar-color-text:var(--color-interactive-text)] [--shopify-account-font-heading:var(--font-heading)] [--shopify-account-font-heading-weight:300] [--shopify-account-font-body:var(--font-body)] [--shopify-account-font-body-weight:400] [--shopify-account-radius-base:var(--radius-card)] [--shopify-account-radius-button:var(--radius-button)] [--shopify-account-radius-button-small:var(--radius-button)] [--shopify-account-radius-input:var(--radius-input)] [--shopify-account-color-background:var(--color-surface)] [--shopify-account-color-text:var(--color-on-surface)] [--shopify-account-color-accent:var(--color-interactive)] [--shopify-account-color-accent-text:var(--color-interactive-text)] [--shopify-account-dialog-position-top:6.5rem] not-[&:defined]:flex not-[&:defined]:h-11 not-[&:defined]:min-w-11 not-[&:defined]:items-center not-[&:defined]:justify-center"
+            >
+              {% if customer %}
+                <div class="size-7 rounded-full bg-interactive" aria-hidden="true"></div>
+              {% else %}
+                <span
+                  slot="signed-out-avatar"
+                  class="inline-flex size-5 items-center justify-center [&_svg]:size-full"
+                  aria-hidden="true"
+                >
+                  {{- 'icon-account.svg' | inline_asset_content -}}
+                </span>
+              {% endif %}
+            </shopify-account>
+          {% endif %}
+
+          {%- comment -%}
+            The cart-count partial is swapped by s-cart.js after every cart mutation
+            to keep the header badge count in sync — do not remove or rename this partial.
+          {%- endcomment -%}
+          {% partial 'cart-count' %}
+            {%- comment -%} The label carries the live count so the trigger stays correctly named for assistive tech after each partial swap. {%- endcomment -%}
+            {%- capture cart_button_attrs -%}id="header-cart-trigger" aria-label="{{ 'cart.icon_label' | t: count: cart.item_count | escape }}"{%- endcapture -%}
+            {% block 'button',
+              commandfor: 'cart-drawer',
+              command: 'show-modal',
+              variant: 'button-ghost',
+              class: 'size-touch-target rounded hover:bg-transparent hover:opacity-70',
+              attributes: cart_button_attrs -%}
+              <span class="relative inline-flex items-center justify-center shrink-0 size-5" aria-hidden="true">
+                {{- 'icon-cart.svg' | inline_asset_content -}}
+                {% if cart.item_count > 0 -%}
+                  <span class="absolute top-0 inset-e-0 translate-x-1/2 rtl:-translate-x-1/2 -translate-y-1/2 flex items-center justify-center size-5 text-xs font-medium bg-interactive text-interactive-text rounded-full">
+                    {{- cart.item_count -}}
+                  </span>
+                {%- endif -%}
+              </span>
+            {%- endblock %}
+            <span aria-live="polite" aria-atomic="true" class="sr-only">
+              {{ 'cart.item_count' | t: count: cart.item_count }}
+            </span>
+          {% endpartial %}
+        </div>
+      </div>
+      {% block 'predictive-search' %}
+        {%- comment -%} These two partials are fetched together by s-live-form; keep their producers in the layout body so child usages and search data remain caller-owned. {%- endcomment -%}
+        {%- comment -%} The action is both the native GET target and the partial fetch URL. Action-scoped requests never modify a search page's URL. {%- endcomment -%}
+        <s-live-form class="block" partial="predictive-results,predictive-meta" debounce="300" data-no-url-sync data-updated-message="{{ 'accessibility.results_updated' | t }}" data-error-message="{{ 'accessibility.update_error' | t }}">
+          <form action="{{ routes.search_url }}" method="get">
+            {% partial 'predictive-meta' %}
+              <span data-results-count hidden>{{ search.results_count }}</span>
+            {% endpartial %}
+            <div class="relative flex items-center gap-1 py-3 border-b border-border shrink-0 ps-3">
+              <span class="inline-flex items-center justify-center shrink-0 size-5 text-on-surface-secondary" aria-hidden="true">{{- 'icon-search.svg' | inline_asset_content -}}</span>
+              <label for="predictive-search-input" class="sr-only">{{ 'search.placeholder' | t }}</label>
+              <input
+                id="predictive-search-input"
+                type="search"
+                name="q"
+                role="combobox"
+                aria-autocomplete="list"
+                aria-controls="predictive-search-listbox"
+                aria-expanded="false"
+                placeholder="{{ 'search.placeholder' | t | escape }}"
+                autocomplete="off"
+                autocorrect="off"
+                autocapitalize="off"
+                autofocus
+                class="peer flex-1 bg-transparent text-on-surface text-base outline-none border-none placeholder:text-on-surface-secondary [&::-webkit-search-cancel-button]:hidden ps-1.5"
+              >
+              {%- comment -%} Clearing redispatches input through s-live-form's debounce/fetch flow. {%- endcomment -%}
+              <button
+                type="button"
+                data-clear-search
+                aria-label="{{ 'general.clear' | t }}"
+                class="inline-flex items-center shrink-0 min-h-6 text-sm text-on-surface-secondary hover:text-on-surface motion-safe:transition-[color,transform] motion-safe:active:scale-[0.97] cursor-pointer peer-placeholder-shown:hidden pe-2.5 me-2"
+              >{{ 'general.clear' | t }}</button>
+              {%- comment -%} Divider offset follows the close button size and margin. {%- endcomment -%}
+              <span class="absolute inset-y-0 inset-e-[calc(2.25rem+16px)] w-px bg-border peer-placeholder-shown:hidden" aria-hidden="true"></span>
+              <button
+                type="button"
+                commandfor="predictive-search"
+                command="close"
+                class="inline-flex items-center justify-center shrink-0 size-9 rounded text-on-surface-secondary hover:text-on-surface hover:bg-surface-secondary cursor-pointer motion-safe:transition-[color,background-color,transform] motion-safe:active:scale-[0.97] me-2"
+                aria-label="{{ 'general.close' | t }}"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+              </button>
+            </div>
+          </form>
+        </s-live-form>
+
+        {% partial 'predictive-results' %}
+          <div class="relative flex-1 min-h-0">
+            <div id="predictive-search-listbox" role="listbox" aria-label="{{ 'search.results_heading' | t }}" class="h-full overflow-y-auto p-4 pb-20">
+              {% if search.performed and search.terms != blank %}
+                {% if search.results_count > 0 %}
+                  {%- assign has_products = false -%}
+                  {%- assign option_index = 0 -%}
+                  {%- assign product_count = 0 -%}
+                  {%- comment -%} The dialog is full-width on mobile, then 90vw capped at 720px; subtract p-4 and 4px grid gaps. {%- endcomment -%}
+                  {%- assign predictive_product_sizes = '(min-width: 800px) 169px, (min-width: 768px) calc((90vw - 44px) / 4), calc((100vw - 36px) / 2)' -%}
+                  {%- capture product_items -%}{%- endcapture -%}
+
+                  {%- for result in search.results -%}
+                    {%- if result.object_type == 'product' -%}
+                      {%- assign product_count = product_count | plus: 1 -%}
+                      {%- if product_count <= 8 -%}
+                        {%- assign has_products = true -%}
+                        {%- capture product_items -%}
+                          {{- product_items -}}
+                          <li id="ps-option-{{ option_index }}" role="option" aria-selected="false" data-ps-url="{{ result.url | escape }}">
+                            {%- # theme-check-disable-next-line UnknownFilter %}
+                            <s-view-event class="block" view-event-trigger="intersect" view-event-payload="{{ result | standard_event_data: 'view', context: 'dialog' | escape }}">
+                              {%- assign card_variant = result.selected_or_first_available_variant -%}
+                              {% block 'card', block.name: 't:blocks.product_card', url: result.url, aria_label: result.title, border_radius: 'rounded-card' %}
+                                <a href="{{ result.url | escape }}" class="relative block overflow-hidden rounded-[inherit]" aria-label="{{ result.title | escape }}">
+                                  {% block 'image', fallback_image: result.featured_image, aspect_ratio: 'aspect-square', alt: result.title, sizes: predictive_product_sizes, seed: product_count, attributes: 'loading="lazy"' %}{% endblock %}
+                                </a>
+                                <div class="flex flex-col gap-0.5">
+                                  {% block 'text', tag: 'h3', variant: 'type-body-sm', class: 'font-medium text-on-surface line-clamp-2' %}{{ result.title | escape }}{% endblock %}
+                                  {% block 'price', price: card_variant.price, compare_at_price: card_variant.compare_at_price, price_min: result.price_min, price_max: result.price_max, class: 'text-sm font-medium self-start group-[.text-center]/card:self-center group-[.text-end]/card:self-end' %}{% endblock %}
+                                </div>
+                              {% endblock %}
+                            </s-view-event>
+                          </li>
+                        {%- endcapture -%}
+                        {%- assign option_index = option_index | plus: 1 -%}
+                      {%- endif -%}
+                    {%- endif -%}
+                  {%- endfor -%}
+
+                  {%- if has_products -%}
+                    <div role="group" aria-labelledby="ps-heading-products">
+                      <h3 id="ps-heading-products" class="text-sm font-medium text-on-surface mb-3">
+                        {{ 'search.products_heading' | t }}
+                      </h3>
+                      <ul class="grid grid-cols-2 md:grid-cols-4 gap-x-1 gap-y-3">
+                        {{ product_items }}
+                      </ul>
+                    </div>
+                  {%- endif -%}
+
+                  <div class="sr-only" data-ps-result-count="{{ search.results_count }}">
+                    {{ 'search.results_count_announcement' | t: count: search.results_count }}
+                  </div>
+                {% else %}
+                  {%- comment -%} Search terms are untrusted query input; escape before plain-text translation interpolation. {%- endcomment -%}
+                  {%- assign clean_search_terms = search.terms | strip_html | escape -%}
+                  <p class="text-on-surface-secondary text-sm py-8 text-center">
+                    {{ 'search.no_results' | t: terms: clean_search_terms }}
+                  </p>
+                  <div class="sr-only" data-ps-result-count="0">
+                    {{ 'search.no_results_announcement' | t: terms: clean_search_terms }}
+                  </div>
+                {% endif %}
+              {% endif %}
+            </div>
+
+            {%- comment -%} Fade and link refresh with results, including the encoded native search destination. {%- endcomment -%}
+            {%- if search.performed and search.terms != blank and search.results_count > 0 -%}
+              {%- assign encoded_search_terms = search.terms | url_encode -%}
+              {%- assign view_all_results_url = routes.search_url | append: '?q=' | append: encoded_search_terms -%}
+              <div data-fade-overlay class="absolute bottom-0 inset-x-0 flex items-end justify-center px-4 pb-4 pt-20 bg-linear-to-t from-surface to-transparent pointer-events-none">
+                <div class="pointer-events-auto">
+                  {% block 'button', url: view_all_results_url, variant: 'button-primary', class: 'h-11 px-14 text-sm rounded-button' %}{{ 'search.view_all_results' | t }}{% endblock %}
+                </div>
+              </div>
+            {%- endif -%}
+          </div>
+        {% endpartial %}
+      {% endblock %}
+
+      <script type="module" src="{{ 's-predictive-search.js' | asset_url }}"></script>
+      <script type="module" src="{{ 's-live-form.js' | asset_url }}"></script>
+
+      {%- comment -%} === CART DRAWER (commerce-critical) ===
+        This <s-cart> instance manages the drawer's cart UI via partial rendering.
+        Its id ("cart-drawer-items") and data-partials values are coupled to s-cart.js —
+        renaming breaks live quantity updates and header counters. cart-drawer-footer
+        is included so the footer refreshes with cart mutations (additional checkout buttons
+        depend on cart state). {%- endcomment -%}
+      {%- capture cart_drawer_content -%}
+        <s-cart class="block" id="cart-drawer-items" data-partials="cart-drawer,cart-count,cart-drawer-count,cart-drawer-footer">
+          {% partial 'cart-drawer' %}
+          {%- comment -%} standard_event_data encodes the less-than character as <,
+            so a literal closing-script tag in cart line attributes (note,
+            line-item properties) cannot terminate this <script> early. {%- endcomment -%}
+          {%- # theme-check-disable UnknownFilter %}
+          <script type="application/json" data-view-event-payload>{{ cart | standard_event_data: 'view', context: 'dialog' }}</script>
+          {%- # theme-check-enable UnknownFilter %}
+          {% if cart.item_count > 0 %}
+            <div class="divide-y divide-border -mt-4">
+              {% for item in cart.items %}
+                {%- comment -%} Drawer images lazy — display:none until opened, 64px thumbs defer imperceptibly {%- endcomment -%}
+                {%- capture line_media -%}
+                  {% if item.image %}{% block 'image', fallback_image: item.image, sizes: '64px', widths: '64,128', alt: item.product.title, class: 'size-full object-contain', attributes: 'loading="lazy"' %}{% endblock %}{% endif %}
+                {%- endcapture -%}
+                {%- capture line_unit_price -%}
+                  {% block 'price', price: item.original_price, class: 'text-xs font-medium [&_span]:text-on-surface-secondary' %}{% endblock %}
+                {%- endcapture -%}
+                {%- assign remove_label = 'cart.remove' | t: title: item.product.title -%}
+                {%- capture line_remove_attributes -%}aria-label="{{ remove_label | escape }}" data-variant-id="{{ item.variant_id }}" data-line-key="{{ item.key | escape }}"{%- endcapture -%}
+                {%- capture line_remove_button -%}
+                  {% block 'button', commandfor: 'cart-drawer-items', command: '--remove', variant: 'button-ghost', class: 'size-touch-target rounded hover:bg-transparent hover:opacity-70', attributes: line_remove_attributes %}<span class="inline-flex items-center justify-center shrink-0 size-4" aria-hidden="true">{{- 'icon-trash.svg' | inline_asset_content -}}</span>{% endblock %}
+                {%- endcapture -%}
+                {% render 'cart-line-item', item: item, cart_id: 'cart-drawer-items', compact: true, media: line_media, unit_price: line_unit_price, remove_button: line_remove_button %}
+              {% endfor %}
+            </div>
+          {% else %}
+            <p class="text-on-surface-secondary text-sm py-8 text-center">{{ 'cart.empty' | t }}</p>
+          {% endif %}
+          {% endpartial %}
+        </s-cart>
+      {%- endcapture -%}
+
+      {%- capture cart_drawer_footer -%}
+        {% partial 'cart-drawer-footer' %}
+        {% if cart.item_count > 0 %}
+          {%- comment -%} The footer has its own s-cart so discount input events and disclosure state stay locally owned while this pinned region refreshes. {%- endcomment -%}
+          <s-cart class="block" id="cart-drawer-summary" data-partials="cart-drawer,cart-count,cart-drawer-count,cart-drawer-footer">
+            {% form 'cart', cart, class: 'flex flex-col gap-3' %}
+              {% render 'cart-discount-list', cart: cart %}
+              <div class="flex items-center justify-between">
+                <span class="text-sm font-medium text-on-surface">{{ 'cart.total_label' | t }}</span>
+                <span class="text-base font-medium text-on-surface [view-transition-name:cart-total]" data-cart-total><bdi>{{ cart.total_price | money }}</bdi></span>
+              </div>
+              {% block 'button', type: 'submit', name: 'checkout', variant: 'button-primary', class: 'h-11 px-4 text-sm rounded-button w-full' %}{{- 'cart.checkout' | t -}}{% endblock %}
+
+              {%- comment -%} Additional checkout buttons are server-rendered by Shopify when accelerated checkout methods are available. The platform class is required by Shopify's injected markup. {%- endcomment -%}
+              {% if additional_checkout_buttons %}
+                <div class="additional-checkout-buttons border-t border-border pt-3 [--shopify-accelerated-checkout-button-block-size:var(--spacing-touch-target)] [--shopify-accelerated-checkout-button-border-radius:var(--radius-button)] [--shopify-accelerated-checkout-button-box-shadow:none] [--shopify-accelerated-checkout-skeleton-background-color:var(--color-surface-secondary)]">
+                  {{ content_for_additional_checkout_buttons }}
+                </div>
+              {% endif %}
+
+              {% render 'cart-discount-code', cart_id: 'cart-drawer-summary', input_id: 'cart-drawer-discount-input' %}
+            {% endform %}
+          </s-cart>
+        {% endif %}
+        {% endpartial %}
+      {%- endcapture -%}
+
+      {%- capture cart_drawer_header -%}
+        <div class="flex items-center shrink-0 ps-4 py-2">
+          <div class="flex items-center gap-2 flex-1">
+            <h2 id="cart-drawer-title" class="text-lg font-medium text-on-surface">{{ 'cart.title' | t }}</h2>
+            {%- comment -%} {% partial 'cart-drawer-count' %} is swapped with the drawer cart partials so the title badge stays in sync after cart mutations. {%- endcomment -%}
+            {% partial 'cart-drawer-count' %}
+              {% if cart.item_count > 0 %}
+                {%- comment -%} size-5.5 = 22px (5.5 * 4px base) {%- endcomment -%}
+                <span class="flex items-center justify-center text-xs font-medium bg-surface-secondary text-on-surface rounded-full size-5.5">{{ cart.item_count }}</span>
+              {% endif %}
+            {% endpartial %}
+          </div>
+          {%- capture cart_close_button_attrs -%}aria-label="{{ 'general.close' | t | escape }}"{%- endcapture -%}
+          {% block 'button', commandfor: 'cart-drawer', command: 'close', variant: 'button-ghost', class: 'size-touch-target rounded hover:bg-transparent hover:opacity-70', autofocus: true, attributes: cart_close_button_attrs %}<span class="inline-flex items-center justify-center shrink-0 size-5" aria-hidden="true">{{- 'icon-x.svg' | inline_asset_content -}}</span>{% endblock %}
+        </div>
+      {%- endcapture -%}
+      {% render 'cart-drawer',
+        header: cart_drawer_header,
+        content: cart_drawer_content,
+        footer: cart_drawer_footer,
+        attributes: 'aria-labelledby="cart-drawer-title"'
+      %}
+    {% endblock %}
+
+    <main class="flex-1" id="main-content" tabindex="-1" data-template="{{ request.page_type }}">
+      {%- comment -%} The editor refreshes this content region for live setting changes, while head-level :root styles can stay cached. {%- endcomment -%}
+      <div style="{% render 'theme-type-scale-variables' %}">
+        {{ content_for_layout }}
+      </div>
+    </main>
+
+    {% render 'sr-announcer' %}
+
+    {%- comment -%} App-style bottom bar for phones only; Search and Cart reuse the header's dialogs through commands. {%- endcomment -%}
+    <nav aria-label="{{ 'bottom_nav.label' | t | escape }}" class="md:hidden fixed inset-x-0 bottom-0 z-30 border-t border-accent/25 bg-surface/95 backdrop-blur pb-[env(safe-area-inset-bottom)]">
+      <ul role="list" class="grid grid-flow-col auto-cols-fr">
+        <li>
+          <a href="{{ routes.root_url }}" class="flex h-16 flex-col items-center justify-center gap-1 no-underline text-[0.625rem] uppercase tracking-[0.12em] {% if template.name == 'index' %}text-accent{% else %}text-on-surface/70{% endif %} hover:text-accent motion-safe:transition-colors motion-safe:active:scale-[0.97]"{% if template.name == 'index' %} aria-current="page"{% endif %}>
+            <svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>
+            {{- 'bottom_nav.home' | t -}}
+          </a>
+        </li>
+        <li>
+          <a href="{{ routes.all_products_collection_url }}" class="flex h-16 flex-col items-center justify-center gap-1 no-underline text-[0.625rem] uppercase tracking-[0.12em] text-on-surface/70 hover:text-accent motion-safe:transition-colors motion-safe:active:scale-[0.97]">
+            <svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 8h14l-1 12a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>
+            {{- 'bottom_nav.shop' | t -}}
+          </a>
+        </li>
+        <li>
+          <button type="button" commandfor="predictive-search" command="show-modal" class="flex h-16 w-full flex-col items-center justify-center gap-1 cursor-pointer text-[0.625rem] uppercase tracking-[0.12em] text-on-surface/70 hover:text-accent motion-safe:transition-colors motion-safe:active:scale-[0.97]">
+            <span class="inline-flex size-5 [&_svg]:size-full" aria-hidden="true">{{- 'icon-search.svg' | inline_asset_content -}}</span>
+            {{- 'bottom_nav.search' | t -}}
+          </button>
+        </li>
+        {%- if shop.customer_accounts_enabled -%}
+          <li>
+            <a href="{{ routes.account_url }}" class="flex h-16 flex-col items-center justify-center gap-1 no-underline text-[0.625rem] uppercase tracking-[0.12em] text-on-surface/70 hover:text-accent motion-safe:transition-colors motion-safe:active:scale-[0.97]">
+              <span class="inline-flex size-5 [&_svg]:size-full" aria-hidden="true">{{- 'icon-account.svg' | inline_asset_content -}}</span>
+              {{- 'bottom_nav.account' | t -}}
+            </a>
+          </li>
+        {%- endif -%}
+        <li>
+          <button type="button" commandfor="cart-drawer" command="show-modal" class="flex h-16 w-full flex-col items-center justify-center gap-1 cursor-pointer text-[0.625rem] uppercase tracking-[0.12em] text-on-surface/70 hover:text-accent motion-safe:transition-colors motion-safe:active:scale-[0.97]">
+            <span class="inline-flex size-5 [&_svg]:size-full" aria-hidden="true">{{- 'icon-cart.svg' | inline_asset_content -}}</span>
+            {{- 'bottom_nav.cart' | t -}}
+          </button>
+        </li>
+      </ul>
+    </nav>
+
+    {%- comment -%} Offscreen footer rendering can be skipped; the intrinsic block-size hint reserves space for the stacked mobile link list until its actual height is known. {%- endcomment -%}
+    {% block 'footer', class: 'px-margin max-w-page mx-auto w-full [content-visibility:auto] [contain-intrinsic-block-size:auto_var(--section-height,500px)] [--section-height:425px]' %}
+      <div class="py-12 flex flex-col gap-8 text-sm border-t border-accent/20">
+        <div class="flex flex-col items-center gap-1 text-center">
+          <span class="font-heading text-5xl font-bold leading-none tracking-[-0.14em] bg-linear-to-b from-[color-mix(in_oklch,var(--color-accent),white_45%)] via-accent to-[color-mix(in_oklch,var(--color-accent),black_35%)] bg-clip-text text-transparent" aria-hidden="true">W<span class="relative -top-[0.12em] text-[0.8em]">Y</span>H</span>
+          {% block 'text', variant: 'type-heading-sm', class: 'mt-1 font-semibold tracking-[0.3em] text-accent' %}
+            {{- 'brand.name' | t -}}
+          {% endblock %}
+          {% block 'text', variant: 'type-overline', class: 'text-xs tracking-[0.25em] text-on-surface/70' %}
+            {{- 'brand.motto' | t -}}
+          {% endblock %}
+        </div>
+        <div class="grid grid-cols-1 justify-items-center text-center">
+          {% block 'basic-menu' %}{% endblock %}
+        </div>
+
+        <div class="border-t border-border pt-6 flex flex-col gap-3 text-xs text-on-surface-secondary md:flex-row md:flex-wrap md:items-center md:justify-between">
+          <p class="m-0">
+            &copy; {{ 'now' | date: '%Y' }}
+            {{ shop.name }}
+          </p>
+
+          {%- comment -%} Store policies ship on by default (Compliance expectation, matches Horizon); the nav renders only when the merchant has published policies, so empty stores keep the two-cell subfooter. Decision recorded on issues-merchant-workflows#4262. {%- endcomment -%}
+          {% if shop.policies.size > 0 %}
+            <nav aria-label="{{ 'footer.policies' | t | escape }}">
+              <ul role="list" class="flex flex-wrap gap-x-4 gap-y-2">
+                {%- for policy in shop.policies -%}
+                  {%- if policy != blank -%}
+                    <li>
+                      <a
+                        href="{{ policy.url }}"
+                        class="inline-flex items-center min-h-touch-target font-normal no-underline text-on-surface-secondary hover:text-on-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent motion-safe:transition-colors"
+                      >
+                        {{ policy.title | escape }}
+                      </a>
+                    </li>
+                  {%- endif -%}
+                {%- endfor -%}
+              </ul>
+            </nav>
+          {% endif %}
+
+          <p class="m-0 [&_a]:text-on-surface-secondary [&_a]:no-underline [&_a:hover]:text-on-surface [&_a:focus-visible]:outline-2 [&_a:focus-visible]:outline-offset-2 [&_a:focus-visible]:outline-accent [&_a]:motion-safe:transition-colors">
+            {{ powered_by_link }}
+          </p>
+        </div>
+      </div>
+    {% endblock %}
+
+    {% render 'notification-host' %}
+    {% render 'theme-scripts' %}
+    {% render 'command-polyfill' %}
+  </body>
+</html>
+
+
