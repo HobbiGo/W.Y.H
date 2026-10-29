@@ -1,0 +1,96 @@
+
+{% doc %}
+  Renders the shop's brand mark as a link to the storefront homepage. Falls
+  back to the shop name in text when no logo image is set. Used in the header
+  of `layout/theme.liquid`.
+
+  The image resolves from `image`, then `shop.brand.logo`,
+  then text fallback. Callers can set `image:`. Logo size and
+  custom height also come from the block's editor settings.
+
+  @param {string} [class] - Additional CSS classes on the root `<a>` element.
+  @param {string} [attributes] - Additional HTML attributes passed through to the root `<a>` element.
+
+  @category content
+  @renders a
+
+  @example
+  {% block 'logo' %}{% endblock %}
+
+  {% block 'logo', class: 'mx-auto' %}{% endblock %}
+{% enddoc %}
+
+{%- liquid
+  assign image          = image | default: shop.brand.logo
+  assign has_logo_image = false
+  if image != blank
+    assign has_logo_image = true
+  endif
+
+  assign size       = size | default: 'logo-size-custom'
+  assign height     = height | default: 32
+  assign size_class = size
+  if size == 'logo-size-custom'
+    assign size_class = 'w-auto'
+  endif
+
+  assign base_class = 'inline-flex items-center text-lg font-medium no-underline text-on-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent rounded-sm'
+  assign full_class = base_class
+  if class != blank
+    assign full_class = full_class | append: ' ' | append: class
+  endif
+-%}
+
+<a href="{{ routes.root_url }}" class="{{ full_class }}"{% if attributes != blank %} {{ attributes }}{% endif %}>
+  {%- if image -%}
+    {%- liquid
+      assign render_width = image.width | times: height | divided_by: image.height
+      assign logo_alt = image.alt | default: shop.name
+    -%}
+    <img src="{{ image | image_url: width: 400 }}" alt="{{ logo_alt | escape }}" width="{{ render_width }}" height="{{ height }}"{% if size == 'logo-size-custom' %} style="height:{{ height }}px"{% endif %} loading="eager" class="{{ size_class }}" />
+  {%- else -%}
+    {{ shop.name | escape }}
+  {%- endif -%}
+</a>
+
+{% comment %} Image-only controls follow the resolved caller, editor, or Brand image rather than only the picker. {% endcomment %}
+{% schema %}
+  {
+    "name": "t:blocks.logo",
+    "settings": [
+      {
+        "type": "image_picker",
+        "id": "image",
+        "label": "t:blocks.logo_settings.image",
+        "info": "t:blocks.logo_settings.image_info"
+      },
+      {
+        "type": "select",
+        "id": "size",
+        "label": "t:blocks.logo_settings.size",
+        "default": "logo-size-custom",
+        "visible_if": "{{ has_logo_image == true }}",
+        "options": [
+          { "value": "w-16", "label": "t:blocks.logo_settings.size_small" },
+          { "value": "w-24", "label": "t:blocks.logo_settings.size_medium" },
+          { "value": "w-32", "label": "t:blocks.logo_settings.size_large" },
+          { "value": "logo-size-custom", "label": "t:blocks.logo_settings.size_custom" }
+        ]
+      },
+      {
+        "type": "range",
+        "id": "height",
+        "label": "t:blocks.logo_settings.height",
+        "info": "t:blocks.logo_settings.height_info",
+        "min": 16,
+        "max": 80,
+        "step": 4,
+        "unit": "px",
+        "default": 32,
+        "visible_if": "{{ has_logo_image == true and size == 'logo-size-custom' }}"
+      }
+    ]
+  }
+{% endschema %}
+
+

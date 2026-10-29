@@ -1,0 +1,42 @@
+
+{% doc %}
+  Renders the global predictive-search component/dialog shell. Its caller owns
+  the live form and both coordinated partial regions, including editable result
+  cards and the view-all control. Open with a trigger button using
+  `commandfor="predictive-search" command="show-modal"`.
+
+  @param {string} [class] - Additional CSS classes to append to the root element.
+  @param {string} [attributes] - Additional HTML attributes passed through to the root element.
+
+  @category interactive
+  @renders s-dialog
+
+  @example
+  {% block 'predictive-search' %}
+    <s-live-form partial="predictive-results,predictive-meta">...</s-live-form>
+    {% partial 'predictive-results' %}...{% endpartial %}
+  {% endblock %}
+{% enddoc %}
+
+{%- comment -%} <s-predictive-search> must wrap <s-dialog> so Escape clears the active combobox option before closing. Its caller must provide #predictive-search-input, #predictive-search-listbox, [role="option"][data-ps-url], and [data-ps-result-count]. {%- endcomment -%}
+<s-predictive-search {% if class != blank %} class="{{ class }}"{% endif %}{% if attributes != blank %} {{ attributes }}{% endif %}>
+<s-dialog close-on-navigate>
+  <dialog
+    id="predictive-search"
+    class="overlay-panel [--panel-closed-transform:translateY(16px)_scale(0.96)] m-auto rounded-lg w-[min(720px,90vw,calc(100vw-var(--safe-area-inset-inline)-var(--safe-area-inset-inline)))] text-on-surface"
+    aria-label="{{ 'general.search' | t }}"
+  >
+    <div data-dialog-body class="flex flex-col max-h-dialog-max-height">
+      {{ content }}
+    </div>
+  </dialog>
+</s-dialog>
+</s-predictive-search>
+
+{% schema %}
+  {
+    "name": "t:blocks.predictive_search"
+  }
+{% endschema %}
+
+

@@ -1,0 +1,257 @@
+
+{% doc %}
+  Renders the complete gift-card redemption experience from the active
+  `gift_card` and `shop` drops: heading and available balance, the dimensional
+  Plain card carrying the merchant identity and value, the merchant logo or
+  store-name fallback, redemption instructions, the copyable code, and the
+  caller-composed actions. Its body renders in the action slot after the code
+  and before copy feedback / Wallet. The caller must derive its copy target and
+  code description ID from the same `id` it passes here; body content cannot
+  read this block's locals. The card material is code-owned; no design selector
+  is rendered or exposed as a block setting. Render at most once per page
+  because its artwork style tag is emitted per instance.
+
+  @param {string} [id] - Stable component/command target ID. Defaults to `gift-card-<block.id>`; callers composing copy actions must supply a known unique ID and use `<id>-code` for aria-describedby.
+  @param {string} [class] - Additional Tailwind utilities for the top-level element.
+  @param {string} [attributes] - Additional attributes passed through to the top-level element.
+
+  @category commerce
+  @renders s-gift-card
+
+  @example
+  {% assign gift_card_id = 'gift-card-redemption' %}
+  {% assign gift_card_code_id = gift_card_id | append: '-code' %}
+  {% assign gift_card_unusable = false %}
+  {% if gift_card.enabled == false or gift_card.expired %}{% assign gift_card_unusable = true %}{% endif %}
+  {% block 'gift-card', id: gift_card_id %}
+    {% capture copy_attributes %}aria-describedby="{{ gift_card_code_id | escape }}"{% endcapture %}
+    {% block 'button', commandfor: gift_card_id, command: '--copy-code', disabled: gift_card_unusable, attributes: copy_attributes %}{{ 'gift_card.copy_code' | t }}{% endblock %}
+  {% endblock %}
+{% enddoc %}
+
+{%- liquid
+  assign root_class = 'block w-full overflow-x-clip text-center'
+  if class != blank
+    assign root_class = root_class | append: ' ' | append: class
+  endif
+
+  assign default_id = 'gift-card-' | append: block.id
+  assign root_id = id | default: default_id
+  assign code_id = root_id | append: '-code'
+  assign shop_initial = shop.name | slice: 0, 1 | upcase
+
+  assign balance_with_currency = gift_card.balance | money_with_currency
+  assign available_text = 'gift_card.available' | t: amount: balance_with_currency
+  assign card_value = gift_card.initial_value | default: gift_card.balance
+  assign card_value_money = card_value | money
+  assign card_label = 'gift_card.card_label' | t: shop: shop.name
+
+  assign logo = shop.brand.logo
+  if logo
+    assign logo_width = 380
+    assign original_logo_width = logo.width | default: 0
+    assign original_logo_height = logo.height | default: 0
+    if original_logo_width > 0 and original_logo_height > 0
+      assign logo_height = original_logo_height | times: logo_width | divided_by: original_logo_width | round
+    else
+      assign logo_height = 120
+    endif
+    assign logo_alt = logo.alt | default: shop.name
+  endif
+-%}
+
+{% style %}
+/* Physical-card corners follow the approved reference (10–17px), not the merchant card-radius token:
+   this is a plastic gift card, and the token's sharp default rendered it square. */
+.gift-card-field {
+  background:
+    radial-gradient(
+      ellipse 90% 82% at 72% 22%,
+      color-mix(in oklab, var(--color-accent) 28%, var(--color-surface)) 0%,
+      transparent 76%
+    ),
+    linear-gradient(
+      145deg,
+      color-mix(in oklab, var(--color-accent) 8%, var(--color-surface)) 0%,
+      color-mix(in oklab, var(--color-on-surface) 16%, var(--color-surface)) 100%
+    );
+  filter: blur(2.25rem);
+  opacity: 0.38;
+}
+
+.gift-card-edge {
+  border-radius: clamp(0.625rem, 1.1vw, 1.0625rem);
+  background: linear-gradient(
+    105deg,
+    color-mix(in oklab, var(--color-surface) 88%, transparent),
+    color-mix(in oklab, var(--color-on-surface) 20%, var(--color-surface-secondary))
+  );
+  box-shadow:
+    inset 0 1px 1px color-mix(in oklab, var(--color-surface) 82%, transparent),
+    inset 0 -1px 1px color-mix(in oklab, var(--color-on-surface) 16%, transparent);
+}
+
+.gift-card-tilt {
+  transform:
+    perspective(1100px)
+    rotateX(var(--gift-card-rx, 10deg))
+    rotateY(var(--gift-card-ry, -3deg))
+    rotateZ(-2deg)
+    translateY(-0.25rem);
+
+  @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+    transition: transform 0.3s var(--ease-ui);
+
+    &:hover {
+      transform:
+        perspective(1100px)
+        rotateX(var(--gift-card-rx, 10deg))
+        rotateY(var(--gift-card-ry, -3deg))
+        rotateZ(-2deg)
+        translateY(-0.75rem)
+        scale(1.012);
+    }
+  }
+}
+
+.gift-card-surface {
+  border-radius: clamp(0.625rem, 1.1vw, 1.0625rem);
+  background: linear-gradient(
+    145deg,
+    var(--color-surface) 0%,
+    var(--color-surface-secondary) 46%,
+    color-mix(in oklab, var(--color-on-surface) 20%, var(--color-surface-secondary)) 100%
+  );
+  box-shadow:
+    inset 1px 1px 1px color-mix(in oklab, var(--color-surface) 75%, transparent),
+    inset -1px -1px 1px color-mix(in oklab, var(--color-on-surface) 14%, transparent),
+    var(--shadow-lg);
+}
+
+.gift-card-glint {
+  background: radial-gradient(
+    circle at 42% 35%,
+    color-mix(in oklab, var(--color-surface) 54%, transparent) 0 4%,
+    color-mix(in oklab, var(--color-surface) 30%, transparent) 12%,
+    transparent 29%
+  );
+}
+{% endstyle %}
+
+<s-gift-card
+  id="{{ root_id | escape }}"
+  class="{{ root_class }}"
+  data-code="{{ gift_card.code | escape }}"
+  data-copy-label="{{ 'gift_card.copy_code' | t | escape }}"
+  data-copy-success="{{ 'gift_card.copied' | t | escape }}"
+  data-copy-error="{{ 'gift_card.copy_error' | t | escape }}"
+  {% if attributes != blank %}{{ attributes }}{% endif %}
+>
+  <div class="mx-auto w-full max-w-2xl">
+    <div class="mb-5 sm:mb-7">
+      <h1 class="type-heading-xl">{{ 'gift_card.a_gift_for_you' | t }}</h1>
+      <p class="type-body mt-3 text-on-surface-secondary" data-gift-card-balance><bdi>{{ available_text }}</bdi></p>
+
+      {% if gift_card.expired %}
+        <p class="type-body mt-3 font-medium text-on-surface">{{ 'gift_card.expired' | t }}</p>
+      {% elsif gift_card.enabled == false %}
+        <p class="type-body mt-3 font-medium text-on-surface">{{ 'gift_card.disabled' | t }}</p>
+      {% endif %}
+
+      {% if gift_card.expires_on %}
+        {% assign expires_on = gift_card.expires_on | date: format: 'date' %}
+        <p class="type-body mt-1 text-on-surface-secondary">{{ 'gift_card.expires_on' | t: expires_on: expires_on }}</p>
+      {% endif %}
+    </div>
+
+    <section class="relative mx-auto w-full max-w-155 py-[4%]" aria-label="{{ card_label | escape }}" data-gift-card-visual>
+      <div class="gift-card-field pointer-events-none absolute inset-[4%] rounded-[50%]" aria-hidden="true"></div>
+      <div class="pointer-events-none absolute top-[68%] inset-s-[27%] h-[7%] w-[48%] -rotate-2 rounded-[50%] bg-on-surface/15 blur-2xl" aria-hidden="true"></div>
+
+      <div class="gift-card-tilt relative z-10 mx-auto w-[88%] transform-3d sm:w-[82%]" data-gift-card-motion>
+        <div class="gift-card-edge absolute inset-x-0 top-1 -bottom-1.5 border border-on-surface/10 transform-[translateZ(1px)]" aria-hidden="true"></div>
+        <article
+          class="gift-card-surface relative flex min-h-[clamp(12rem,55vw,20rem)] flex-col overflow-hidden border border-on-surface/10 p-4 text-start text-on-surface backface-hidden transform-[translateZ(7px)] sm:p-8 lg:p-10"
+          data-gift-card-surface
+        >
+          <div class="gift-card-glint pointer-events-none absolute -inset-[30%] mix-blend-screen opacity-60" aria-hidden="true"></div>
+
+          <div class="relative z-10 flex min-h-full flex-1 flex-col" data-gift-card-content>
+            <div class="flex min-h-8 items-center justify-between gap-3 sm:gap-4" data-gift-card-identity>
+              <span class="flex max-w-[35%] shrink-0 items-center">
+                {% if logo %}
+                  <img
+                    src="{{ logo | image_url: width: logo_width }}"
+                    alt=""
+                    width="{{ logo_width }}"
+                    height="{{ logo_height }}"
+                    loading="eager"
+                    class="max-h-8 w-auto max-w-full object-contain"
+                    aria-hidden="true"
+                  >
+                {% else %}
+                  <span class="font-heading text-3xl italic leading-none" aria-hidden="true">{{ shop_initial }}</span>
+                {% endif %}
+              </span>
+              <span class="min-w-0 max-w-full flex-1 text-end text-[clamp(0.45rem,1.5vw,0.7rem)] font-medium uppercase tracking-[0.2em] opacity-70 wrap-anywhere" data-gift-card-name>{{ shop.name }}</span>
+            </div>
+
+            <div class="my-auto flex flex-col items-start pb-[6%]" data-gift-card-message>
+              <span class="mb-2 max-w-full text-[clamp(0.5rem,1.5vw,0.7rem)] font-medium uppercase tracking-[0.12em] opacity-70">{{ 'gift_card.a_little_something' | t }}</span>
+              <strong class="max-w-full font-heading text-[clamp(1.6rem,6vw,3.15rem)] font-light leading-none tracking-[-0.045em] wrap-anywhere"><bdi>{{ card_value_money }}</bdi></strong>
+            </div>
+
+            <div class="flex flex-col items-start justify-between gap-1 border-t border-current/20 pt-[clamp(0.65rem,2.4vw,1.25rem)] text-[clamp(0.5rem,1.25vw,0.65rem)] font-medium uppercase tracking-[0.12em] sm:flex-row sm:items-end sm:gap-3" data-gift-card-meta>
+              <span class="opacity-70">{{ 'gift_card.card' | t }}</span>
+              <bdi class="min-w-0 break-all text-start opacity-70 sm:text-end" dir="ltr">{{ shop.domain }}</bdi>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <div class="mx-auto my-8 flex min-h-14 w-full max-w-xs items-center justify-center px-4" data-gift-card-merchant>
+      {% if logo %}
+        <img
+          src="{{ logo | image_url: width: logo_width }}"
+          alt="{{ logo_alt | escape }}"
+          width="{{ logo_width }}"
+          height="{{ logo_height }}"
+          loading="eager"
+          class="max-h-14 w-auto max-w-full object-contain"
+        >
+      {% else %}
+        <h2 class="type-heading-xl max-w-full break-words">{{ shop.name }}</h2>
+      {% endif %}
+    </div>
+
+    <p class="type-body mb-6 text-on-surface-secondary">{{ 'gift_card.use_at_checkout' | t }}</p>
+    <code id="{{ code_id | escape }}" class="block select-all whitespace-normal break-words font-mono text-[clamp(0.875rem,3.6vw,1.375rem)] tracking-[0.13em] text-on-surface" dir="ltr" tabindex="-1" data-gift-card-code>{{ gift_card.code | format_code }}</code>
+
+    {{ content }}
+
+    <p class="sr-only" role="status" aria-live="polite" aria-atomic="true" data-gift-card-feedback></p>
+
+    {% if gift_card.pass_url %}
+      <a href="{{ gift_card.pass_url }}" class="mt-6 inline-flex min-h-touch-target items-center justify-center rounded-button focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent motion-safe:transition-transform motion-safe:active:scale-[0.97]">
+        <img
+          src="{{ 'gift-card/add-to-apple-wallet.svg' | shopify_asset_url }}"
+          alt="{{ 'gift_card.add_to_apple_wallet' | t }}"
+          width="200"
+          height="60"
+          class="h-10 w-auto"
+        >
+      </a>
+    {% endif %}
+
+  </div>
+</s-gift-card>
+
+{% schema %}
+  {
+    "name": "t:blocks.gift_card",
+    "settings": []
+  }
+{% endschema %}
+
+
